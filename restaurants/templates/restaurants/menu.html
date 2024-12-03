@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ restaurant.name }} - Menu{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: {{ restaurant.theme.primary_color|default:'#1a1a1a' }};
+        --secondary-color: {{ restaurant.theme.secondary_color|default:'#d4af37' }};
+        --background-color: {{ restaurant.theme.background_color|default:'#ffffff' }};
+        --font-family: {{ restaurant.theme.font_family|default:'Poppins' }}, sans-serif;
+        --text-color: #333333;
+    }
+
+    body {
+        font-family: var(--font-family);
+        background-color: var(--background-color);
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+
+    .restaurant-header {
+        position: relative;
+        background: #f8f9fa;
+    }
+
+    .cover-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6));
+    }
+
+    .cover-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .restaurant-info {
+        position: relative;
+        padding: 2rem;
+        text-align: center;
+        background: white;
+    }
+
+    .logo-container {
+        width: 120px;
+        height: 120px;
+        margin: -60px auto 1rem;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .logo-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .menu-section {
+        margin: 2rem 0;
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .category-title {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary-color);
+    }
+
+    .menu-item {
+        display: flex;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .menu-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .item-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-right: 1rem;
+    }
+
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin: 0;
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: var(--secondary-color);
+        white-space: nowrap;
+        margin-left: 1rem;
+    }
+
+    .item-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .dietary-info {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+    }
+
+    .dietary-tag {
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        background: #f0f0f0;
+        color: #666;
+    }
+
+    .dietary-tag i {
+        margin-right: 0.3rem;
+    }
+
+    .unavailable {
+        opacity: 0.6;
+    }
+
+    .unavailable::after {
+        content: "Unavailable";
+        display: inline-block;
+        margin-left: 1rem;
+        color: #dc3545;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="restaurant-header">
+    {% if restaurant.cover_image %}
+    <div class="cover-container">
+        <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }} cover" class="cover-image">
+    </div>
+    {% endif %}
+    
+    <div class="restaurant-info {% if restaurant.cover_image %}with-cover{% endif %}">
+        {% if restaurant.logo %}
+        <div class="logo-container">
+            <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }} logo" class="logo-image">
+        </div>
+        {% endif %}
+        
+        <h1>{{ restaurant.name }}</h1>
+        {% if restaurant.description %}
+        <p class="restaurant-description">{{ restaurant.description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container py-4">
+    {% if categories %}
+        {% for category in categories %}
+        <div class="menu-section">
+            <h2 class="category-title">{{ category.name }}</h2>
+            {% if category.items.all %}
+                {% for item in category.items.all %}
+                <div class="menu-item {% if not item.is_available %}unavailable{% endif %}">
+                    {% if item.image %}
+                    <div class="item-image">
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    </div>
+                    {% endif %}
+                    <div class="item-details">
+                        <div class="item-header">
+                            <h3 class="item-name">{{ item.name }}</h3>
+                            <span class="item-price">{{ item.price }} DH</span>
+                        </div>
+                        {% if item.description %}
+                        <p class="item-description">{{ item.description }}</p>
+                        {% endif %}
+                        <div class="dietary-info">
+                            {% if item.is_vegetarian %}
+                            <span class="dietary-tag"><i class="fas fa-leaf"></i>Vegetarian</span>
+                            {% endif %}
+                            {% if item.is_vegan %}
+                            <span class="dietary-tag"><i class="fas fa-seedling"></i>Vegan</span>
+                            {% endif %}
+                            {% if item.is_gluten_free %}
+                            <span class="dietary-tag"><i class="fas fa-wheat-awn-circle-exclamation"></i>Gluten Free</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No items in this category yet.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-menu">
+            <i class="fas fa-utensils fa-3x mb-3"></i>
+            <h3>Menu Coming Soon</h3>
+            <p>We're currently working on our menu. Please check back later!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

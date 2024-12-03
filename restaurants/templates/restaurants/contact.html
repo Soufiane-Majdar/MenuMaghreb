@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Contact Sales - MenuMaghreb Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-section {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        padding: 80px 0;
+    }
+    
+    .contact-form {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .plan-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .contact-methods {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .contact-method-item {
+        margin-bottom: 20px;
+    }
+    
+    .contact-icon {
+        font-size: 2rem;
+        color: #007bff;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="contact-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-4">Contact Our Sales Team</h1>
+        <p class="lead">We're here to help you choose the right plan for your business</p>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Contact Form -->
+        <div class="col-lg-8">
+            <div class="contact-form">
+                <h2 class="mb-4">Get in Touch</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="plan" class="form-label">Interested Plan</label>
+                        <select class="form-select" id="plan" name="plan" required>
+                            <option value="">Select a plan</option>
+                            <option value="pro">Pro Plan (499 MAD lifetime)</option>
+                            <option value="enterprise">Enterprise Plan (499 MAD/month)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Contact Info -->
+        <div class="col-lg-4">
+            <div class="contact-methods">
+                <h3 class="mb-4">Other Ways to Reach Us</h3>
+                
+                <div class="contact-method-item text-center">
+                    <i class="fas fa-envelope contact-icon"></i>
+                    <h4>Email</h4>
+                    <p>sales@devmaghreb.com</p>
+                </div>
+                
+                <div class="contact-method-item text-center">
+                    <i class="fas fa-phone contact-icon"></i>
+                    <h4>Phone</h4>
+                    <p>+212 XXX-XXXXXX</p>
+                </div>
+                
+                <div class="contact-method-item text-center">
+                    <i class="fab fa-instagram contact-icon"></i>
+                    <h4>Instagram</h4>
+                    <a href="https://www.instagram.com/devmaghreb" target="_blank" class="text-decoration-none">
+                        @devmaghreb
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

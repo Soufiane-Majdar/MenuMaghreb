@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .create-restaurant-form {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .image-preview {
+        width: 100%;
+        height: 200px;
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .preview-placeholder {
+        color: #999;
+        text-align: center;
+    }
+
+    .preview-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="create-restaurant-form">
+        <h1 class="text-center mb-4">Create New Restaurant</h1>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="name" class="form-label">Restaurant Name*</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="logo" class="form-label">Logo</label>
+                    <div class="image-preview" id="logoPreview">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-image"></i>
+                            <p>Upload Logo</p>
+                        </div>
+                    </div>
+                    <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="cover_image" class="form-label">Cover Image</label>
+                    <div class="image-preview" id="coverPreview">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-image"></i>
+                            <p>Upload Cover Image</p>
+                        </div>
+                    </div>
+                    <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/*">
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="address" class="form-label">Address</label>
+                <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phone" name="phone">
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">Create Restaurant</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        const placeholder = preview.querySelector('.preview-placeholder');
+        
+        input.addEventListener('change', function() {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    placeholder.style.display = 'none';
+                    
+                    let img = preview.querySelector('img');
+                    if (!img) {
+                        img = document.createElement('img');
+                        preview.appendChild(img);
+                    }
+                    img.src = e.target.result;
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                placeholder.style.display = 'block';
+                const img = preview.querySelector('img');
+                if (img) {
+                    img.remove();
+                }
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        previewImage(document.getElementById('logo'), 'logoPreview');
+        previewImage(document.getElementById('cover_image'), 'coverPreview');
+    });
+</script>
+{% endblock %}

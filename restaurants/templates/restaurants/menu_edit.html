@@ -1,0 +1,265 @@
+{% extends 'restaurants/base.html' %}
+{% load static %}
+{% block title %}Edit Menu - {{ restaurant.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .menu-editor {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .category-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+    }
+
+    .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .category-title {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin: 0;
+    }
+
+    .menu-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .menu-item {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 1rem;
+        position: relative;
+    }
+
+    .menu-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.5rem;
+    }
+
+    .menu-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .menu-item-actions {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .add-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .add-section h3 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .form-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .dietary-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .dietary-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .empty-category {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .menu-items {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="menu-editor">
+    <h1 class="mb-4">Edit Menu - {{ restaurant.name }}</h1>
+
+    <!-- Add Category Section -->
+    <div class="add-section">
+        <h3>Add New Category</h3>
+        <form method="post" class="form-section">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ category_form.name }}
+            </div>
+            <button type="submit" name="add_category" class="btn btn-primary">Add Category</button>
+        </form>
+    </div>
+
+    <!-- Add Menu Item Section -->
+    <div class="add-section">
+        <h3>Add New Menu Item</h3>
+        <form method="post" enctype="multipart/form-data" class="form-section">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select" required>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                {{ item_form.name }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                {{ item_form.description }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Price</label>
+                {{ item_form.price }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Image</label>
+                {{ item_form.image }}
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ item_form.is_available }}
+                    <label class="form-check-label">Available</label>
+                </div>
+            </div>
+            <div class="dietary-options">
+                <div class="dietary-option">
+                    {{ item_form.is_vegetarian }}
+                    <label class="form-check-label">Vegetarian</label>
+                </div>
+                <div class="dietary-option">
+                    {{ item_form.is_vegan }}
+                    <label class="form-check-label">Vegan</label>
+                </div>
+                <div class="dietary-option">
+                    {{ item_form.is_gluten_free }}
+                    <label class="form-check-label">Gluten Free</label>
+                </div>
+            </div>
+            <button type="submit" name="add_item" class="btn btn-primary mt-3">Add Menu Item</button>
+        </form>
+    </div>
+
+    <!-- Categories and Items List -->
+    {% for category in categories %}
+    <div class="category-section">
+        <div class="category-header">
+            <h2 class="category-title">{{ category.name }}</h2>
+            <div class="action-buttons">
+                <a href="{% url 'restaurants:delete_category' restaurant.id category.id %}" 
+                   class="btn btn-danger btn-sm"
+                   onclick="return confirm('Are you sure you want to delete this category?')">
+                    <i class="fas fa-trash"></i> Delete Category
+                </a>
+            </div>
+        </div>
+
+        <div class="menu-items">
+            {% for item in category.items.all %}
+            <div class="menu-item">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                {% endif %}
+                <div class="menu-item-header">
+                    <h3>{{ item.name }}</h3>
+                    <div class="menu-item-actions">
+                        <a href="{% url 'restaurants:delete_item' restaurant.id item.id %}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete this item?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                <p class="text-muted">{{ item.description }}</p>
+                <p class="fw-bold">{{ item.price }} DH</p>
+                <div class="dietary-info">
+                    {% if item.is_vegetarian %}
+                    <span class="badge bg-success me-1">Vegetarian</span>
+                    {% endif %}
+                    {% if item.is_vegan %}
+                    <span class="badge bg-success me-1">Vegan</span>
+                    {% endif %}
+                    {% if item.is_gluten_free %}
+                    <span class="badge bg-success">Gluten Free</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-category">
+                <p class="text-muted">No items in this category yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show success messages
+    {% if messages %}
+    {% for message in messages %}
+    alert('{{ message }}');
+    {% endfor %}
+    {% endif %}
+</script>
+{% endblock %}

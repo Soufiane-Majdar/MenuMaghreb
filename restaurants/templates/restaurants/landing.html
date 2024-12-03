@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MenuMaghreb Platform - Digital Menus Made Easy{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern color scheme */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        --secondary-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-image-container {
+        position: relative;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .hero-image {
+        width: 100%;
+        height: auto;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        transform: perspective(1000px) rotateY(-15deg);
+        transition: transform 0.5s ease;
+    }
+
+    .hero-image:hover {
+        transform: perspective(1000px) rotateY(0deg);
+    }
+
+    .hero-image::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+        border-radius: 20px;
+    }
+
+    /* Features Section */
+    .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Pricing Section */
+    .pricing-section {
+        background: var(--secondary-gradient);
+        padding: 80px 0;
+    }
+
+    .pricing-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .pricing-header {
+        background: var(--primary-gradient);
+        padding: 30px 20px;
+        color: white;
+        text-align: center;
+    }
+
+    .most-popular .pricing-header {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .popular-badge {
+        position: absolute;
+        top: 15px;
+        right: -35px;
+        background: #fbbf24;
+        color: #1e3a8a;
+        padding: 5px 40px;
+        transform: rotate(45deg);
+        font-size: 0.8rem;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .price {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .price-period {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .pricing-features {
+        padding: 30px;
+    }
+
+    .pricing-feature {
+        padding: 10px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .pricing-feature:last-child {
+        border-bottom: none;
+    }
+
+    .pricing-feature i {
+        color: #10b981;
+        margin-right: 10px;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+
+    /* Floating Animation */
+    @keyframes float {
+        0% { transform: translateY(0px) perspective(1000px) rotateY(-15deg); }
+        50% { transform: translateY(-20px) perspective(1000px) rotateY(-15deg); }
+        100% { transform: translateY(0px) perspective(1000px) rotateY(-15deg); }
+    }
+
+    .floating {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    /* Buttons */
+    .btn-gradient {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid white;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline:hover {
+        background: white;
+        color: #2563eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="display-4 fw-bold mb-4">Transform Your Menu Into a Digital Experience</h1>
+                <p class="lead mb-5">Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'register' %}" class="btn btn-gradient">Get Started Free</a>
+                    <a href="#pricing" class="btn btn-outline">View Pricing</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image-container">
+                    <img src="{% static 'img/hero-image.png' %}" alt="Menu Example" class="hero-image floating">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center display-5 mb-5">Why Choose Our Platform?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-qrcode feature-icon"></i>
+                    <h3>Smart QR Codes</h3>
+                    <p class="text-muted">Generate dynamic QR codes that customers can scan to instantly view your digital menu. Update your menu anytime without changing QR codes.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-paint-brush feature-icon"></i>
+                    <h3>Beautiful Themes</h3>
+                    <p class="text-muted">Choose from our professionally designed themes or create your own with our intuitive customization tools.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-mobile-alt feature-icon"></i>
+                    <h3>Mobile-First Design</h3>
+                    <p class="text-muted">Perfectly optimized for all devices, ensuring your customers have a great experience whether on phone or tablet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section id="pricing" class="pricing-section">
+    <div class="container">
+        <h2 class="text-center display-5 mb-5">Simple, Transparent Pricing</h2>
+        <div class="row g-4">
+            <!-- Free Plan -->
+            <div class="col-md-4">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Free</h3>
+                        <div class="price">0 MAD</div>
+                        <div class="price-period">forever</div>
+                    </div>
+                    <div class="pricing-features">
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>1 Menu
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Basic QR Code
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Email Support
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'register' %}" class="btn btn-gradient">Get Started</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pro Plan -->
+            <div class="col-md-4">
+                <div class="pricing-card most-popular">
+                    <div class="pricing-header">
+                        <div class="popular-badge">Most Popular</div>
+                        <h3>Pro</h3>
+                        <div class="price">499 MAD</div>
+                        <div class="price-period">lifetime</div>
+                    </div>
+                    <div class="pricing-features">
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>3 Menus
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Custom QR Codes
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Priority Support
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Analytics Dashboard
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'contact' %}" class="btn btn-gradient">Contact Sales</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enterprise Plan -->
+            <div class="col-md-4">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Enterprise</h3>
+                        <div class="price">499 MAD</div>
+                        <div class="price-period">per month</div>
+                    </div>
+                    <div class="pricing-features">
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Unlimited Menus
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Custom Integration
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>24/7 Support
+                        </div>
+                        <div class="pricing-feature">
+                            <i class="fas fa-check"></i>Multi-location Support
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'contact' %}" class="btn btn-gradient">Contact Sales</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="display-5 mb-4">Ready to Transform Your Menu?</h2>
+        <p class="lead text-muted mb-5">Join thousands of restaurants already using our platform</p>
+        <a href="{% url 'register' %}" class="btn btn-gradient btn-lg">Get Started Now</a>
+    </div>
+</section>
+{% endblock %}

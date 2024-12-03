@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ restaurant.name }} - Menu{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Poppins:wght@400;500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-color: {{ restaurant.primary_color|default:'#007bff' }};
+        --secondary-color: {{ restaurant.secondary_color|default:'#6c757d' }};
+        --background-color: {{ restaurant.background_color|default:'#ffffff' }};
+        --text-color: {{ restaurant.text_color|default:'#212529' }};
+        --accent-color: {{ restaurant.accent_color|default:'#17a2b8' }};
+    }
+
+    body {
+        font-family: {{ restaurant.font_family|default:'Roboto' }}, sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+
+    .menu-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .restaurant-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .restaurant-logo {
+        max-width: 150px;
+        height: auto;
+        margin-bottom: 20px;
+    }
+
+    .restaurant-name {
+        color: var(--primary-color);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .restaurant-description {
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+
+    .menu-category {
+        margin-bottom: 40px;
+    }
+
+    .category-name {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent-color);
+    }
+
+    /* Modern Grid Style */
+    .menu-style-modern .menu-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .menu-style-modern .menu-item {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .menu-style-modern .menu-item:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Classic List Style */
+    .menu-style-classic .menu-item {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--secondary-color);
+    }
+
+    /* Elegant Cards Style */
+    .menu-style-elegant .menu-item {
+        background: white;
+        border: 1px solid var(--accent-color);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Minimal Style */
+    .menu-style-minimal .menu-item {
+        padding: 15px 0;
+        border-bottom: 1px solid var(--secondary-color);
+    }
+
+    .item-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .item-content {
+        padding: 15px;
+    }
+
+    .item-name {
+        color: var(--primary-color);
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+
+    .item-description {
+        color: var(--text-color);
+        margin-bottom: 10px;
+    }
+
+    .item-price {
+        color: var(--accent-color);
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .dietary-info {
+        margin-top: 10px;
+    }
+
+    .badge {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="menu-container menu-style-{{ restaurant.menu_style }}">
+    <div class="restaurant-header">
+        {% if restaurant.logo %}
+        <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="restaurant-logo">
+        {% endif %}
+        <h1 class="restaurant-name">{{ restaurant.name }}</h1>
+        {% if restaurant.description %}
+        <p class="restaurant-description">{{ restaurant.description }}</p>
+        {% endif %}
+    </div>
+
+    {% for category in categories %}
+    <div class="menu-category">
+        <h2 class="category-name">{{ category.name }}</h2>
+        <div class="menu-items">
+            {% for item in category.menuitem_set.all %}
+            <div class="menu-item">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="item-image">
+                {% endif %}
+                <div class="item-content">
+                    <h3 class="item-name">{{ item.name }}</h3>
+                    {% if item.description %}
+                    <p class="item-description">{{ item.description }}</p>
+                    {% endif %}
+                    <div class="item-price">{{ item.price|floatformat:2 }} DH</div>
+                    <div class="dietary-info">
+                        {% if item.is_vegetarian %}
+                        <span class="badge">Vegetarian</span>
+                        {% endif %}
+                        {% if item.is_vegan %}
+                        <span class="badge">Vegan</span>
+                        {% endif %}
+                        {% if item.is_gluten_free %}
+                        <span class="badge">Gluten Free</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- DevMaghreb Credit -->
+<div class="text-center py-3 mt-4">
+    <p class="small text-muted mb-0">
+        Powered by <a href="https://www.instagram.com/devmagheb" target="_blank" class="text-decoration-none fw-bold">𝐃𝐞𝐯𝐌𝐚𝐠𝐡𝐫𝐞𝐛</a>
+    </p>
+</div>
+{% endblock %}

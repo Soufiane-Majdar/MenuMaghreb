@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - MenuMaghreb Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .restaurant-card {
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    
+    .restaurant-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .restaurant-logo {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    
+    .stats-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .stats-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Restaurants</h1>
+        <a href="{% url 'restaurant_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Restaurant
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for restaurant in restaurants %}
+        <div class="col">
+            <div class="card h-100 restaurant-card shadow-sm">
+                {% if restaurant.cover_image %}
+                <img src="{{ restaurant.cover_image.url }}" class="card-img-top restaurant-logo" alt="{{ restaurant.name }}">
+                {% else %}
+                <div class="card-img-top restaurant-logo bg-light d-flex align-items-center justify-content-center">
+                    <i class="fas fa-utensils fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ restaurant.name }}</h5>
+                    <p class="card-text text-muted">{{ restaurant.description|truncatewords:20 }}</p>
+                    
+                    <div class="stats-card">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Categories</small>
+                                <div class="stats-number">{{ restaurant.menucategory_set.count }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Items</small>
+                                <div class="stats-number">
+                                    {% with item_count=restaurant.menucategory_set.all|length %}
+                                    {{ item_count }}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'restaurant_menu_edit' restaurant.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edit Menu
+                        </a>
+                        <a href="{% url 'menu_view' restaurant.id %}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-eye"></i> View Menu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                <h3>No Restaurants Yet</h3>
+                <p class="text-muted">Start by adding your first restaurant!</p>
+                <a href="{% url 'restaurant_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Restaurant
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
