@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
 from .models import Restaurant, MenuCategory, MenuItem, Table, Subscription
-from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm
+from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThemeForm
 
 # Create your views here.
 
@@ -17,8 +17,20 @@ def landing(request):
 def dashboard(request):
     subscription = get_object_or_404(Subscription, user=request.user)
     restaurants = Restaurant.objects.filter(owner=request.user)
+    
+    # Get stats for all restaurants
+    restaurant_stats = []
+    for restaurant in restaurants:
+        stats = {
+            'restaurant': restaurant,
+            'categories': MenuCategory.objects.filter(restaurant=restaurant),
+            'total_items': MenuItem.objects.filter(category__restaurant=restaurant).count(),
+            'active_items': MenuItem.objects.filter(category__restaurant=restaurant, is_available=True).count(),
+        }
+        restaurant_stats.append(stats)
+
     context = {
-        'restaurants': restaurants,
+        'restaurant_stats': restaurant_stats,
         'subscription': subscription,
         'can_create_restaurant': subscription.can_create_restaurant()
     }
@@ -345,3 +357,22 @@ def upgrade_subscription(request, plan):
         return redirect('dashboard')
         
     return redirect('subscription_plans')
+
+@login_required
+def theme_customize(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    
+    if request.method == 'POST':
+        form = RestaurantThemeForm(request.POST, instance=restaurant)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Theme settings updated successfully!')
+            return redirect('restaurant_menu_edit', restaurant_id=restaurant.id)
+    else:
+        form = RestaurantThemeForm(instance=restaurant)
+    
+    context = {
+        'restaurant': restaurant,
+        'form': form,
+    }
+    return render(request, 'restaurants/theme_customize.html', context)

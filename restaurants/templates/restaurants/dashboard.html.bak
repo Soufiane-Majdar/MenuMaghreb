@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - MenuMaghreb{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Restaurant Info Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if restaurant.logo %}
+                        <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }} logo" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                        {% endif %}
+                        <h2 class="card-title">{{ restaurant.name }}</h2>
+                        <p class="text-muted">{{ restaurant.description|truncatewords:20 }}</p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'restaurant_edit' restaurant.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edit Restaurant
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-4">Menu QR Code</h3>
+                    {% if restaurant.qr_code %}
+                    <div class="qr-code-container mb-4">
+                        <img src="{{ restaurant.qr_code.url }}" alt="Menu QR Code" class="img-fluid" style="max-width: 200px;">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ restaurant.qr_code.url }}" download class="btn btn-success">
+                            <i class="fas fa-download"></i> Download QR Code
+                        </a>
+                        <a href="{% url 'menu_view' restaurant.id %}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> Preview Menu
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">QR code will be generated when you save your restaurant details.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Quick Stats</h3>
+                    <div class="list-group">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Categories
+                            <span class="badge bg-primary rounded-pill">{{ categories.count }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Menu Items
+                            <span class="badge bg-primary rounded-pill">{{ total_items }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Active Items
+                            <span class="badge bg-success rounded-pill">{{ active_items }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Management Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-title mb-0">Menu Categories</h3>
+                        <a href="{% url 'category_create' restaurant.id %}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add Category
+                        </a>
+                    </div>
+
+                    {% if categories %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Category Name</th>
+                                    <th>Items</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.items.count }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'category_edit' restaurant.id category.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{% url 'item_create' restaurant.id %}" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-plus"></i> Add Item
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">No categories yet. Start by adding a category to your menu.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Preview -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Theme Preview</h3>
+                    <div class="theme-preview p-4" style="
+                        background-color: {{ restaurant.background_color }};
+                        color: {{ restaurant.text_color }};
+                        font-family: {{ restaurant.font_family }}, sans-serif;
+                        border-radius: 8px;
+                    ">
+                        <h4 style="color: {{ restaurant.primary_color }};">Sample Menu Item</h4>
+                        <p style="color: {{ restaurant.text_color }};">This is how your menu text will appear to customers.</p>
+                        <button class="btn" style="
+                            background-color: {{ restaurant.accent_color }};
+                            color: white;
+                        ">Sample Button</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .card {
+        border: none;
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .qr-code-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        display: inline-block;
+    }
+    .theme-preview {
+        border: 1px solid #dee2e6;
+    }
+    .btn-group {
+        gap: 5px;
+    }
+</style>
+{% endblock %}

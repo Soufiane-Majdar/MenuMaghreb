@@ -30,6 +30,9 @@ urlpatterns = [
     path('restaurant/<int:restaurant_id>/category/<int:category_id>/edit/', login_required(views.category_edit), name='category_edit'),
     path('restaurant/<int:restaurant_id>/category/<int:category_id>/delete/', login_required(views.delete_category), name='delete_category'),
     
+    # Theme customization
+    path('restaurant/<int:restaurant_id>/theme/', login_required(views.theme_customize), name='theme_customize'),
+    
     path('restaurant/<int:restaurant_id>/item/create/', login_required(views.item_create), name='item_create'),
     path('restaurant/<int:restaurant_id>/item/<int:item_id>/edit/', login_required(views.item_edit), name='item_edit'),
     path('restaurant/<int:restaurant_id>/item/<int:item_id>/delete/', login_required(views.delete_item), name='delete_item'),

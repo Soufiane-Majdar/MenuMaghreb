@@ -59,8 +59,9 @@ class Restaurant(models.Model):
     description = models.TextField(blank=True)
     address = models.TextField()
     phone = models.CharField(max_length=20)
-    logo = models.ImageField(upload_to='restaurant_logos/', null=True, blank=True)
-    cover_image = models.ImageField(upload_to='restaurant_covers/', null=True, blank=True)
+    logo = models.ImageField(upload_to='logos/', null=True, blank=True, max_length=255)
+    cover_image = models.ImageField(upload_to='covers/', null=True, blank=True, max_length=255)
+    qr_code = models.ImageField(upload_to='restaurant_qr_codes/', blank=True, null=True, max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -96,6 +97,31 @@ class Restaurant(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        # Generate QR code for the menu
+        if not self.qr_code:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            # Use request.build_absolute_uri in views instead of hardcoding the URL
+            menu_url = f'/menu/{self.id}/'
+            qr.add_data(menu_url)
+            qr.make(fit=True)
+
+            qr_image = qr.make_image(fill_color="black", back_color="white")
+            
+            # Convert to RGB if necessary
+            if qr_image.mode != 'RGB':
+                qr_image = qr_image.convert('RGB')
+            
+            # Save QR code
+            qr_buffer = BytesIO()
+            qr_image.save(qr_buffer, format='PNG')
+            self.qr_code.save(f'menu_qr_{self.id}.png',
+                            File(qr_buffer), save=False)
+
         # Optimize logo if it exists
         if self.logo:
             img = Image.open(self.logo)
@@ -151,7 +177,7 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='menu_items/', blank=True, null=True)
+    image = models.ImageField(upload_to='menu_items/', blank=True, null=True, max_length=255)
     is_available = models.BooleanField(default=True)
     order = models.IntegerField(default=0)
     

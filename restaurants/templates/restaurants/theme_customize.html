@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Customize Theme - {{ restaurant.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .color-preview {
+        width: 100%;
+        height: 100px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .theme-preview {
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .sample-text {
+        margin: 10px 0;
+    }
+    .sample-button {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-0">Theme Customization</h1>
+                    <p class="text-muted mb-0">{{ restaurant.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'menu_view' restaurant.id %}" class="btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-eye"></i> Preview Menu
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+                        
+                        <div class="col-md-6">
+                            {{ form.primary_color|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.secondary_color|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.background_color|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.text_color|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.accent_color|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.font_family|as_crispy_field }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.menu_style|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Theme
+                            </button>
+                            <a href="{% url 'restaurant_menu_edit' restaurant.id %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="sticky-top" style="top: 2rem;">
+                <h4 class="mb-4">Live Preview</h4>
+                
+                <div class="theme-preview" id="themePreview" style="
+                    background-color: {{ restaurant.background_color }};
+                    color: {{ restaurant.text_color }};
+                    font-family: {{ restaurant.font_family }}, sans-serif;
+                ">
+                    <h3 style="color: {{ restaurant.primary_color }};">Sample Menu Item</h3>
+                    <p class="sample-text">This is how your menu text will appear to customers.</p>
+                    <p class="sample-text" style="color: {{ restaurant.secondary_color }};">
+                        $12.99
+                    </p>
+                    <a href="#" class="sample-button" style="
+                        background-color: {{ restaurant.accent_color }};
+                        color: white;
+                    ">Order Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update live preview when color inputs change
+    const colorInputs = document.querySelectorAll('input[type="color"]');
+    const fontSelect = document.querySelector('select[name="font_family"]');
+    const preview = document.getElementById('themePreview');
+    
+    colorInputs.forEach(input => {
+        input.addEventListener('input', updatePreview);
+    });
+    
+    fontSelect.addEventListener('change', updatePreview);
+    
+    function updatePreview() {
+        const primaryColor = document.querySelector('input[name="primary_color"]').value;
+        const secondaryColor = document.querySelector('input[name="secondary_color"]').value;
+        const backgroundColor = document.querySelector('input[name="background_color"]').value;
+        const textColor = document.querySelector('input[name="text_color"]').value;
+        const accentColor = document.querySelector('input[name="accent_color"]').value;
+        const fontFamily = fontSelect.value;
+        
+        preview.style.backgroundColor = backgroundColor;
+        preview.style.color = textColor;
+        preview.style.fontFamily = `${fontFamily}, sans-serif`;
+        
+        preview.querySelector('h3').style.color = primaryColor;
+        preview.querySelector('.sample-text:nth-child(2)').style.color = secondaryColor;
+        preview.querySelector('.sample-button').style.backgroundColor = accentColor;
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

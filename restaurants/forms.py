@@ -2,6 +2,20 @@ from django import forms
 from .models import Restaurant, MenuCategory, MenuItem
 from colorfield.widgets import ColorWidget
 
+FONT_CHOICES = [
+    ('Arial', 'Arial'),
+    ('Calibri', 'Calibri'),
+    ('Courier New', 'Courier New'),
+    ('Helvetica', 'Helvetica'),
+    ('Times New Roman', 'Times New Roman'),
+    ('Verdana', 'Verdana')
+]
+
+MENU_STYLE_CHOICES = [
+    ('list', 'List'),
+    ('grid', 'Grid')
+]
+
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
@@ -15,11 +29,11 @@ class RestaurantForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'address': forms.Textarea(attrs={'rows': 2}),
-            'primary_color': ColorWidget(attrs={'class': 'form-control'}),
-            'secondary_color': ColorWidget(attrs={'class': 'form-control'}),
-            'background_color': ColorWidget(attrs={'class': 'form-control'}),
-            'text_color': ColorWidget(attrs={'class': 'form-control'}),
-            'accent_color': ColorWidget(attrs={'class': 'form-control'}),
+            'primary_color': ColorWidget(),
+            'secondary_color': ColorWidget(),
+            'background_color': ColorWidget(),
+            'text_color': ColorWidget(),
+            'accent_color': ColorWidget(),
             'font_family': forms.Select(attrs={'class': 'form-select'}),
             'menu_style': forms.Select(attrs={'class': 'form-select'})
         }
@@ -44,6 +58,28 @@ class RestaurantForm(forms.ModelForm):
             'accent_color': 'Used for highlighting and special elements',
             'font_family': 'Choose the font for your menu text',
             'menu_style': 'Select the overall layout of your menu'
+        }
+
+class RestaurantThemeForm(forms.ModelForm):
+    class Meta:
+        model = Restaurant
+        fields = [
+            'primary_color',
+            'secondary_color',
+            'background_color',
+            'text_color',
+            'accent_color',
+            'font_family',
+            'menu_style'
+        ]
+        widgets = {
+            'primary_color': ColorWidget,
+            'secondary_color': ColorWidget,
+            'background_color': ColorWidget,
+            'text_color': ColorWidget,
+            'accent_color': ColorWidget,
+            'font_family': forms.Select(choices=FONT_CHOICES),
+            'menu_style': forms.Select(choices=MENU_STYLE_CHOICES),
         }
 
 class MenuCategoryForm(forms.ModelForm):
