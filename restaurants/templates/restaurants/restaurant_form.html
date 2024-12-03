@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if is_create %}Create New Restaurant{% else %}Edit Restaurant{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .image-preview {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .logo-preview {
+        max-height: 200px;
+        width: auto;
+    }
+    .cover-preview {
+        max-height: 300px;
+        width: 100%;
+        object-fit: cover;
+    }
+    .theme-preview {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+    }
+    .theme-preview-header {
+        padding: 1rem;
+    }
+    .theme-preview-content {
+        padding: 1rem;
+    }
+    .theme-preview-item {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+    }
+    .color-picker {
+        width: 100% !important;
+        height: 38px !important;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .color-picker-wrapper {
+        position: relative;
+    }
+    .color-preview {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{% if is_create %}Create New Restaurant{% else %}Edit Restaurant{% endif %}</h2>
+                    
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" class="row g-3">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h4 class="mb-3">Basic Information</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">{{ form.name|as_crispy_field }}</div>
+                                <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
+                                <div class="col-12">{{ form.address|as_crispy_field }}</div>
+                                <div class="col-12">{{ form.description|as_crispy_field }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div class="col-12">
+                            <h4 class="mb-3">Restaurant Images</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {{ form.logo|as_crispy_field }}
+                                    {% if form.instance.logo %}
+                                    <img src="{{ form.instance.logo.url }}" alt="Current Logo" class="image-preview logo-preview mt-2">
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.cover_image|as_crispy_field }}
+                                    {% if form.instance.cover_image %}
+                                    <img src="{{ form.instance.cover_image.url }}" alt="Current Cover" class="image-preview cover-preview mt-2">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if subscription.plan == 'pro' or subscription.plan == 'enterprise' %}
+                        <!-- Theme Customization -->
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4 class="mb-3">Theme Customization</h4>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">{{ form.primary_color|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ form.secondary_color|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ form.background_color|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ form.text_color|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ form.accent_color|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ form.font_family|as_crispy_field }}</div>
+                                        <div class="col-12">{{ form.menu_style|as_crispy_field }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h4 class="mb-3">Live Preview</h4>
+                                    <div id="themePreview" class="theme-preview">
+                                        <div class="theme-preview-header">
+                                            <h5 class="mb-0">Sample Menu</h5>
+                                        </div>
+                                        <div class="theme-preview-content">
+                                            <div class="theme-preview-item">
+                                                <h6>Appetizer</h6>
+                                                <p class="mb-1">Delicious Starter</p>
+                                                <small>$9.99</small>
+                                            </div>
+                                            <div class="theme-preview-item">
+                                                <h6>Main Course</h6>
+                                                <p class="mb-1">Special Dish</p>
+                                                <small>$24.99</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Form Actions -->
+                        <div class="col-12 d-flex gap-2 justify-content-end mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if is_create %}
+                                <i class="fas fa-plus"></i> Create Restaurant
+                                {% else %}
+                                <i class="fas fa-save"></i> Save Changes
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview uploaded images
+    function previewImage(input, previewClass) {
+        input.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let preview = input.parentElement.querySelector('.image-preview');
+                    if (!preview) {
+                        preview = document.createElement('img');
+                        preview.classList.add('image-preview', previewClass, 'd-block', 'mt-2');
+                        input.parentElement.appendChild(preview);
+                    }
+                    preview.src = e.target.result;
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    // Initialize image previews
+    previewImage(document.querySelector('input[name="logo"]'), 'logo-preview');
+    previewImage(document.querySelector('input[name="cover_image"]'), 'cover-preview');
+
+    // Theme preview functionality
+    function updateThemePreview() {
+        const preview = document.getElementById('themePreview');
+        if (!preview) return;
+
+        const primaryColor = document.querySelector('input[name="primary_color"]').value;
+        const secondaryColor = document.querySelector('input[name="secondary_color"]').value;
+        const backgroundColor = document.querySelector('input[name="background_color"]').value;
+        const textColor = document.querySelector('input[name="text_color"]').value;
+        const accentColor = document.querySelector('input[name="accent_color"]').value;
+        const fontFamily = document.querySelector('select[name="font_family"]').value;
+
+        preview.style.backgroundColor = backgroundColor;
+        preview.style.color = textColor;
+        preview.style.fontFamily = fontFamily;
+
+        const header = preview.querySelector('.theme-preview-header');
+        header.style.backgroundColor = primaryColor;
+        header.style.color = textColor === '#ffffff' ? '#000000' : '#ffffff';
+
+        const items = preview.querySelectorAll('.theme-preview-item');
+        items.forEach(item => {
+            item.style.backgroundColor = secondaryColor + '20';
+            item.style.borderLeft = `4px solid ${accentColor}`;
+        });
+    }
+
+    // Initialize color pickers
+    const colorInputs = document.querySelectorAll('input[type="color"], select[name="font_family"]');
+    colorInputs.forEach(input => {
+        input.addEventListener('input', updateThemePreview);
+        input.addEventListener('change', updateThemePreview);
+    });
+
+    // Initial preview update
+    updateThemePreview();
+});
+</script>
+{% endblock %}

@@ -1,23 +1,37 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
 from django.contrib import messages
-from .models import Restaurant, MenuCategory, MenuItem, Table, MenuTheme
-from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThemeForm
+from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
+from .models import Restaurant, MenuCategory, MenuItem, Table, Subscription
+from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm
 
 # Create your views here.
 
-def landing_page(request):
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
     return render(request, 'restaurants/landing.html')
 
 @login_required
 def dashboard(request):
+    subscription = get_object_or_404(Subscription, user=request.user)
     restaurants = Restaurant.objects.filter(owner=request.user)
-    return render(request, 'restaurants/dashboard.html', {'restaurants': restaurants})
+    context = {
+        'restaurants': restaurants,
+        'subscription': subscription,
+        'can_create_restaurant': subscription.can_create_restaurant()
+    }
+    return render(request, 'restaurants/dashboard.html', context)
 
 @login_required
 def restaurant_create(request):
+    subscription = get_object_or_404(Subscription, user=request.user)
+    
+    if not subscription.can_create_restaurant():
+        messages.error(request, 'You have reached the maximum number of restaurants for your subscription plan.')
+        return redirect('dashboard')
+    
     if request.method == 'POST':
         form = RestaurantForm(request.POST, request.FILES)
         if form.is_valid():
@@ -28,16 +42,22 @@ def restaurant_create(request):
             return redirect('dashboard')
     else:
         form = RestaurantForm()
-    return render(request, 'restaurants/restaurant_create.html', {'form': form})
+    
+    context = {
+        'form': form,
+        'is_create': True,
+        'subscription': subscription
+    }
+    return render(request, 'restaurants/restaurant_form.html', context)
 
 @login_required
-def restaurant_detail(request, restaurant_id):
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
-    return render(request, 'restaurants/restaurant_detail.html', {'restaurant': restaurant})
-
-@login_required
-def restaurant_edit(request, restaurant_id):
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+def restaurant_edit(request, pk):
+    restaurant = get_object_or_404(Restaurant, pk=pk)
+    subscription = get_object_or_404(Subscription, user=request.user)
+    
+    if restaurant.owner != request.user:
+        raise PermissionDenied
+    
     if request.method == 'POST':
         form = RestaurantForm(request.POST, request.FILES, instance=restaurant)
         if form.is_valid():
@@ -46,12 +66,26 @@ def restaurant_edit(request, restaurant_id):
             return redirect('dashboard')
     else:
         form = RestaurantForm(instance=restaurant)
-    return render(request, 'restaurants/restaurant_edit.html', {'form': form, 'restaurant': restaurant})
+    
+    context = {
+        'form': form,
+        'is_create': False,
+        'subscription': subscription
+    }
+    return render(request, 'restaurants/restaurant_form.html', context)
+
+@login_required
+def restaurant_detail(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    return render(request, 'restaurants/restaurant_detail.html', {'restaurant': restaurant})
 
 @login_required
 def restaurant_menu_edit(request, restaurant_id):
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
-    categories = MenuCategory.objects.filter(restaurant=restaurant)
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    if restaurant.owner != request.user:
+        raise PermissionDenied("You don't have permission to edit this restaurant's menu.")
+    
+    categories = restaurant.categories.all().prefetch_related('items').order_by('order')
     
     if request.method == 'POST':
         category_form = MenuCategoryForm(request.POST)
@@ -64,11 +98,13 @@ def restaurant_menu_edit(request, restaurant_id):
     else:
         category_form = MenuCategoryForm()
     
-    return render(request, 'restaurants/restaurant_menu_edit.html', {
+    context = {
         'restaurant': restaurant,
         'categories': categories,
-        'category_form': category_form
-    })
+        'category_form': category_form,
+        'subscription': request.user.subscription
+    }
+    return render(request, 'restaurants/restaurant_menu_edit.html', context)
 
 def menu_view(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
@@ -119,83 +155,91 @@ def category_create(request, restaurant_id):
             return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
     else:
         form = MenuCategoryForm()
-    return render(request, 'restaurants/category_create.html', {'form': form, 'restaurant': restaurant})
+    return render(request, 'restaurants/category_form.html', {
+        'form': form,
+        'restaurant': restaurant,
+        'action': 'Create'
+    })
 
 @login_required
-def category_edit(request, category_id):
-    category = get_object_or_404(MenuCategory, id=category_id, restaurant__owner=request.user)
-    
+def category_edit(request, restaurant_id, category_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    category = get_object_or_404(MenuCategory, id=category_id, restaurant=restaurant)
     if request.method == 'POST':
         form = MenuCategoryForm(request.POST, instance=category)
         if form.is_valid():
             form.save()
             messages.success(request, 'Category updated successfully!')
-            return redirect('restaurant_menu_edit', restaurant_id=category.restaurant.id)
+            return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
     else:
         form = MenuCategoryForm(instance=category)
-    
-    return render(request, 'restaurants/category_edit.html', {
+    return render(request, 'restaurants/category_form.html', {
         'form': form,
-        'category': category
+        'restaurant': restaurant,
+        'category': category,
+        'action': 'Edit'
     })
+
+@login_required
+def delete_category(request, restaurant_id, category_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    category = get_object_or_404(MenuCategory, id=category_id, restaurant=restaurant)
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Category deleted successfully!')
+    else:
+        messages.error(request, 'Invalid request method!')
+    return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
 
 @login_required
 def item_create(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
-    
     if request.method == 'POST':
-        form = MenuItemForm(request.POST, request.FILES, restaurant=restaurant)
+        form = MenuItemForm(request.POST, request.FILES)
         if form.is_valid():
             item = form.save(commit=False)
-            item.category = form.cleaned_data['category']
+            item.restaurant = restaurant
             item.save()
             messages.success(request, 'Menu item created successfully!')
             return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
     else:
-        form = MenuItemForm(restaurant=restaurant)
-    
-    return render(request, 'restaurants/item_create.html', {
+        form = MenuItemForm()
+    return render(request, 'restaurants/item_form.html', {
         'form': form,
         'restaurant': restaurant,
+        'action': 'Create'
     })
 
 @login_required
-def item_edit(request, item_id):
-    item = get_object_or_404(MenuItem, id=item_id, category__restaurant__owner=request.user)
-    restaurant = item.category.restaurant
+def item_edit(request, restaurant_id, item_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    item = get_object_or_404(MenuItem, id=item_id, category__restaurant=restaurant)
     
     if request.method == 'POST':
         form = MenuItemForm(request.POST, request.FILES, instance=item, restaurant=restaurant)
         if form.is_valid():
             form.save()
             messages.success(request, 'Menu item updated successfully!')
-            return redirect('restaurant_menu_edit', restaurant_id=restaurant.id)
+            return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
     else:
         form = MenuItemForm(instance=item, restaurant=restaurant)
     
-    return render(request, 'restaurants/item_edit.html', {
+    context = {
         'form': form,
-        'item': item,
-        'restaurant': restaurant
-    })
-
-@login_required
-def delete_category(request, restaurant_id, category_id):
-    category = get_object_or_404(MenuCategory, id=category_id, restaurant__owner=request.user)
-    
-    if request.method == 'POST':
-        restaurant_id = category.restaurant.id
-        category.delete()
-        messages.success(request, 'Category deleted successfully!')
-        return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
-    
-    return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
+        'restaurant': restaurant,
+        'item': item
+    }
+    return render(request, 'restaurants/item_form.html', context)
 
 @login_required
 def delete_item(request, restaurant_id, item_id):
-    item = get_object_or_404(MenuItem, id=item_id, category__restaurant__owner=request.user)
-    item.delete()
-    messages.success(request, 'Menu item deleted successfully!')
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    item = get_object_or_404(MenuItem, id=item_id, restaurant=restaurant)
+    if request.method == 'POST':
+        item.delete()
+        messages.success(request, 'Menu item deleted successfully!')
+    else:
+        messages.error(request, 'Invalid request method!')
     return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
 
 @login_required
@@ -218,44 +262,6 @@ def table_management(request, restaurant_id):
     return render(request, 'restaurants/table_management.html', {
         'restaurant': restaurant,
         'tables': tables,
-    })
-
-@login_required
-def theme_settings(request, restaurant_id):
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
-    theme, created = MenuTheme.objects.get_or_create(restaurant=restaurant)
-    
-    if request.method == 'POST':
-        theme.primary_color = request.POST.get('primary_color', theme.primary_color)
-        theme.secondary_color = request.POST.get('secondary_color', theme.secondary_color)
-        theme.background_color = request.POST.get('background_color', theme.background_color)
-        theme.font_family = request.POST.get('font_family', theme.font_family)
-        theme.save()
-        
-        messages.success(request, 'Theme settings updated successfully!')
-        return redirect('theme_settings', restaurant_id=restaurant_id)
-    
-    return render(request, 'restaurants/theme_settings.html', {
-        'restaurant': restaurant,
-        'theme': theme,
-    })
-
-@login_required
-def theme_customize(request, restaurant_id):
-    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
-    
-    if request.method == 'POST':
-        form = RestaurantThemeForm(request.POST, instance=restaurant)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Theme settings updated successfully!')
-            return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
-    else:
-        form = RestaurantThemeForm(instance=restaurant)
-    
-    return render(request, 'restaurants/theme_customize.html', {
-        'form': form,
-        'restaurant': restaurant
     })
 
 @login_required
@@ -292,3 +298,50 @@ def contact_view(request):
         return redirect('contact')
     
     return render(request, 'restaurants/contact.html')
+
+def handler403(request, exception):
+    return render(request, 'errors/403.html', status=403)
+
+def handler404(request, exception):
+    return render(request, 'errors/404.html', status=404)
+
+def handler500(request):
+    return render(request, 'errors/500.html', status=500)
+
+@login_required
+def delete_restaurant(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
+    if request.method == 'POST':
+        restaurant.delete()
+        messages.success(request, 'Restaurant deleted successfully!')
+    return redirect('dashboard')
+
+@login_required
+def subscription_plans(request):
+    current_subscription = request.user.subscription
+    context = {
+        'current_plan': current_subscription.plan,
+        'subscription': current_subscription,
+    }
+    return render(request, 'restaurants/subscription_plans.html', context)
+
+@login_required
+def upgrade_subscription(request, plan):
+    if request.method == 'POST':
+        if plan not in ['free', 'pro', 'enterprise']:
+            messages.error(request, 'Invalid subscription plan.')
+            return redirect('subscription_plans')
+            
+        subscription = request.user.subscription
+        subscription.plan = plan
+        subscription.save()
+        
+        if plan == 'free':
+            message = 'Successfully switched to Free plan.'
+        else:
+            message = f'Successfully upgraded to {plan.title()} plan!'
+        
+        messages.success(request, message)
+        return redirect('dashboard')
+        
+    return redirect('subscription_plans')

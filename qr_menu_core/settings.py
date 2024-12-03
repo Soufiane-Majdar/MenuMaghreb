@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'restaurants.middleware.AuthenticationMiddleware',  # Add our custom middleware
 ]
 
 ROOT_URLCONF = 'qr_menu_core.urls'
@@ -133,10 +134,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Authentication
+# Authentication settings
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'landing'
-LOGIN_URL = 'login'
+
+# Session settings
+SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+SESSION_COOKIE_SECURE = True  # Only send cookie over HTTPS
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # REST Framework
 REST_FRAMEWORK = {

@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscription Plans - MenuMaghreb{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plan-card {
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    .plan-card:hover {
+        transform: translateY(-5px);
+    }
+    .plan-card.current {
+        border-color: var(--bs-primary);
+    }
+    .feature-list {
+        list-style: none;
+        padding-left: 0;
+    }
+    .feature-list li {
+        margin-bottom: 0.5rem;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+    .feature-list li:before {
+        content: "✓";
+        color: var(--bs-success);
+        position: absolute;
+        left: 0;
+    }
+    .price {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--bs-primary);
+    }
+    .price small {
+        font-size: 1rem;
+        color: var(--bs-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-3">Choose Your Plan</h1>
+        <p class="lead text-muted">Select the perfect plan for your restaurant's digital menu needs</p>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
+        <!-- Free Plan -->
+        <div class="col">
+            <div class="card plan-card shadow-sm {% if current_plan == 'free' %}current{% endif %}">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">Free Plan</h3>
+                    <div class="text-center mb-4">
+                        <div class="price mb-2">$0<small>/month</small></div>
+                        <p class="text-muted">Perfect for getting started</p>
+                    </div>
+                    <ul class="feature-list mb-4">
+                        <li>1 Restaurant</li>
+                        <li>Basic QR Code</li>
+                        <li>Basic Menu Customization</li>
+                        <li>Email Support</li>
+                    </ul>
+                    {% if current_plan == 'free' %}
+                    <button class="btn btn-outline-primary w-100" disabled>Current Plan</button>
+                    {% else %}
+                    <form method="post" action="{% url 'upgrade_subscription' 'free' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary w-100">Switch to Free</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="col">
+            <div class="card plan-card shadow {% if current_plan == 'pro' %}current{% endif %}">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">Pro Plan</h3>
+                    <div class="text-center mb-4">
+                        <div class="price mb-2">$29<small>/month</small></div>
+                        <p class="text-muted">Most Popular Choice</p>
+                    </div>
+                    <ul class="feature-list mb-4">
+                        <li>Up to 3 Restaurants</li>
+                        <li>Custom QR Codes</li>
+                        <li>Advanced Theme Customization</li>
+                        <li>Priority Support</li>
+                        <li>Basic Analytics</li>
+                        <li>Menu Categories</li>
+                    </ul>
+                    {% if current_plan == 'pro' %}
+                    <button class="btn btn-primary w-100" disabled>Current Plan</button>
+                    {% else %}
+                    <form method="post" action="{% url 'upgrade_subscription' 'pro' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100">Upgrade to Pro</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="col">
+            <div class="card plan-card shadow-sm {% if current_plan == 'enterprise' %}current{% endif %}">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">Enterprise</h3>
+                    <div class="text-center mb-4">
+                        <div class="price mb-2">$99<small>/month</small></div>
+                        <p class="text-muted">For Large Businesses</p>
+                    </div>
+                    <ul class="feature-list mb-4">
+                        <li>Unlimited Restaurants</li>
+                        <li>Branded QR Codes</li>
+                        <li>Advanced Analytics</li>
+                        <li>24/7 Priority Support</li>
+                        <li>Custom Integration</li>
+                        <li>API Access</li>
+                        <li>Dedicated Account Manager</li>
+                    </ul>
+                    {% if current_plan == 'enterprise' %}
+                    <button class="btn btn-outline-primary w-100" disabled>Current Plan</button>
+                    {% else %}
+                    <form method="post" action="{% url 'upgrade_subscription' 'enterprise' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary w-100">Contact Sales</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <p class="text-muted">
+            All plans include basic features like menu management, QR code generation, and customer support.<br>
+            Need help choosing? <a href="{% url 'contact' %}">Contact our team</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

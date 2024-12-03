@@ -1,78 +1,72 @@
 from django import forms
 from .models import Restaurant, MenuCategory, MenuItem
+from colorfield.widgets import ColorWidget
 
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        fields = ['name', 'description', 'address', 'phone', 'logo', 'cover_image']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Restaurant Name'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Restaurant Description'}),
-            'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Restaurant Address'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}),
-            'logo': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-            'cover_image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-        }
-
-class RestaurantThemeForm(forms.ModelForm):
-    class Meta:
-        model = Restaurant
         fields = [
+            'name', 'description', 'address', 'phone',
+            'logo', 'cover_image',
             'primary_color', 'secondary_color', 'background_color',
-            'text_color', 'accent_color', 'font_family', 'menu_style'
+            'text_color', 'accent_color',
+            'font_family', 'menu_style'
         ]
         widgets = {
-            'primary_color': forms.TextInput(attrs={'class': 'form-control color-picker'}),
-            'secondary_color': forms.TextInput(attrs={'class': 'form-control color-picker'}),
-            'background_color': forms.TextInput(attrs={'class': 'form-control color-picker'}),
-            'text_color': forms.TextInput(attrs={'class': 'form-control color-picker'}),
-            'accent_color': forms.TextInput(attrs={'class': 'form-control color-picker'}),
-            'font_family': forms.Select(attrs={'class': 'form-control'}),
-            'menu_style': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'address': forms.Textarea(attrs={'rows': 2}),
+            'primary_color': ColorWidget(attrs={'class': 'form-control'}),
+            'secondary_color': ColorWidget(attrs={'class': 'form-control'}),
+            'background_color': ColorWidget(attrs={'class': 'form-control'}),
+            'text_color': ColorWidget(attrs={'class': 'form-control'}),
+            'accent_color': ColorWidget(attrs={'class': 'form-control'}),
+            'font_family': forms.Select(attrs={'class': 'form-select'}),
+            'menu_style': forms.Select(attrs={'class': 'form-select'})
         }
         labels = {
-            'primary_color': 'Primary Color',
-            'secondary_color': 'Secondary Color',
+            'logo': 'Restaurant Logo',
+            'cover_image': 'Cover Image',
+            'primary_color': 'Primary Brand Color',
+            'secondary_color': 'Secondary Brand Color',
             'background_color': 'Background Color',
             'text_color': 'Text Color',
             'accent_color': 'Accent Color',
-            'font_family': 'Font Family',
-            'menu_style': 'Menu Style',
+            'font_family': 'Menu Font',
+            'menu_style': 'Menu Layout Style'
+        }
+        help_texts = {
+            'logo': 'Upload a square logo image (recommended size: 200x200px)',
+            'cover_image': 'Upload a wide cover image (recommended size: 1200x400px)',
+            'primary_color': 'Main brand color used for headers and buttons',
+            'secondary_color': 'Used for secondary elements',
+            'background_color': 'Background color of the menu',
+            'text_color': 'Color of the menu text',
+            'accent_color': 'Used for highlighting and special elements',
+            'font_family': 'Choose the font for your menu text',
+            'menu_style': 'Select the overall layout of your menu'
         }
 
 class MenuCategoryForm(forms.ModelForm):
     class Meta:
         model = MenuCategory
-        fields = ['name']
+        fields = ['name', 'order']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Category Name'})
+            'order': forms.NumberInput(attrs={'min': 0})
         }
 
 class MenuItemForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        restaurant = kwargs.pop('restaurant', None)
+    class Meta:
+        model = MenuItem
+        fields = ['category', 'name', 'description', 'price', 'image', 'is_available', 'order']
+        widgets = {
+            'price': forms.NumberInput(attrs={'min': 0, 'step': '0.01'}),
+            'order': forms.NumberInput(attrs={'min': 0}),
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+
+    def __init__(self, *args, restaurant=None, **kwargs):
         super().__init__(*args, **kwargs)
         if restaurant:
             self.fields['category'].queryset = MenuCategory.objects.filter(restaurant=restaurant)
-        
-        # Update price field widget to show MAD
-        self.fields['price'].widget.attrs.update({
-            'step': '0.01',
-            'min': '0',
-            'placeholder': 'Price in MAD'
-        })
-        self.fields['price'].label = 'Price (MAD)'
-
-    class Meta:
-        model = MenuItem
-        fields = ['name', 'description', 'price', 'image', 'category', 'is_available', 'is_vegetarian', 'is_vegan', 'is_gluten_free']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Name'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Item Description'}),
-            'category': forms.Select(attrs={'class': 'form-control'}),
-            'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_vegetarian': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_vegan': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_gluten_free': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
+        elif self.instance and self.instance.category:
+            self.fields['category'].queryset = MenuCategory.objects.filter(restaurant=self.instance.category.restaurant)

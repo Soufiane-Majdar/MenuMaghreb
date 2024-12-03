@@ -21,6 +21,10 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from restaurants import views as restaurant_views
 
+handler403 = 'restaurants.views.handler403'
+handler404 = 'restaurants.views.handler404'
+handler500 = 'restaurants.views.handler500'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     

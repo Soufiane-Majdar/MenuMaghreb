@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Restaurant, MenuCategory, MenuItem, Table, MenuTheme
+from .models import Restaurant, MenuCategory, MenuItem, Table
 
 # Register your models here.
 
@@ -28,8 +28,3 @@ class TableAdmin(admin.ModelAdmin):
     list_display = ('restaurant', 'table_number', 'seats')
     list_filter = ('restaurant',)
     search_fields = ('table_number', 'restaurant__name')
-
-@admin.register(MenuTheme)
-class MenuThemeAdmin(admin.ModelAdmin):
-    list_display = ('restaurant', 'primary_color', 'secondary_color', 'font_family')
-    search_fields = ('restaurant__name',)

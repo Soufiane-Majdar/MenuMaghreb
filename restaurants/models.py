@@ -65,11 +65,11 @@ class Restaurant(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     # Theme Settings
-    primary_color = ColorField(default='#007bff')
-    secondary_color = ColorField(default='#6c757d')
-    background_color = ColorField(default='#ffffff')
-    text_color = ColorField(default='#212529')
-    accent_color = ColorField(default='#17a2b8')
+    primary_color = ColorField(format='hexa', default='#007bff')
+    secondary_color = ColorField(format='hexa', default='#6c757d')
+    background_color = ColorField(format='hexa', default='#ffffff')
+    text_color = ColorField(format='hexa', default='#212529')
+    accent_color = ColorField(format='hexa', default='#17a2b8')
     font_family = models.CharField(
         max_length=50,
         choices=[
@@ -174,10 +174,10 @@ class Table(models.Model):
     table_number = models.CharField(max_length=50)
     seats = models.IntegerField(default=2)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True)
-    
+
     def __str__(self):
         return f"{self.restaurant.name} - Table {self.table_number}"
-    
+
     def save(self, *args, **kwargs):
         if not self.qr_code:
             qr = qrcode.QRCode(
@@ -186,27 +186,19 @@ class Table(models.Model):
                 box_size=10,
                 border=4,
             )
-            # Generate URL for this table's menu
-            url = f'/menu/{self.restaurant.id}/?table={self.table_number}'
-            qr.add_data(url)
+            qr.add_data(f'table/{self.id}')
             qr.make(fit=True)
 
-            img = qr.make_image(fill_color="black", back_color="white")
+            qr_image = qr.make_image(fill_color="black", back_color="white")
             
-            # Save QR code image
+            # Convert to RGB if necessary
+            if qr_image.mode != 'RGB':
+                qr_image = qr_image.convert('RGB')
+            
+            # Save QR code
             buffer = BytesIO()
-            img.save(buffer, format='PNG')
-            filename = f'qr_restaurant_{self.restaurant.id}_table_{self.table_number}.png'
-            self.qr_code.save(filename, File(buffer), save=False)
+            qr_image.save(buffer, format='PNG')
+            self.qr_code.save(f'qr_code_{self.restaurant.id}_{self.table_number}.png',
+                            File(buffer), save=False)
         
         super().save(*args, **kwargs)
-
-class MenuTheme(models.Model):
-    restaurant = models.OneToOneField(Restaurant, on_delete=models.CASCADE, related_name='theme')
-    primary_color = ColorField(default='#FF0000')
-    secondary_color = ColorField(default='#00FF00')
-    background_color = ColorField(default='#FFFFFF')
-    font_family = models.CharField(max_length=100, default='Arial')
-    
-    def __str__(self):
-        return f"{self.restaurant.name}'s Theme"
