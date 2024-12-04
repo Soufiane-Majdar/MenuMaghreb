@@ -60,3 +60,5 @@ INFO 2024-12-04 12:05:18,057 autoreload 104127 134047039286144 /home/sofiane/Cas
 INFO 2024-12-04 12:05:19,143 autoreload 107079 133845234776960 Watching for file changes with StatReloader
 INFO 2024-12-04 12:05:20,553 autoreload 107079 133845234776960 /home/sofiane/CascadeProjects/qr_menu_platform/qr_menu_core/settings.py changed, reloading.
 INFO 2024-12-04 12:05:21,782 autoreload 107101 125169291443072 Watching for file changes with StatReloader
+INFO 2024-12-04 12:11:50,141 autoreload 107101 125169291443072 /home/sofiane/CascadeProjects/qr_menu_platform/qr_menu_core/wsgi.py changed, reloading.
+INFO 2024-12-04 12:11:51,843 autoreload 107931 135936949218176 Watching for file changes with StatReloader
