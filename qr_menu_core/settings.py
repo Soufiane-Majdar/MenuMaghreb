@@ -43,22 +43,22 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',  # Add this
     'django.contrib.staticfiles',
-    'cloudinary',  # And this
-    'restaurants.apps.RestaurantsConfig',  # Keep only this one
+    'cloudinary_storage',
+    'cloudinary',
     'crispy_forms',
     'crispy_bootstrap5',
     'colorfield',
+    'restaurants',
     'rest_framework',
     'django_redis',  # Add redis cache
     'compressor',  # Add compressor for static files compression
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',  # Add this at the beginning
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this after security middleware
+    'django.middleware.cache.UpdateCacheMiddleware',  # Add this at the beginning
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -125,39 +125,36 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# Static files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static_build',  # Keep original static files here
+    BASE_DIR / 'static',
 ]
 
-# Media files
+# Use WhiteNoise for static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files configuration
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Cloudinary configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
+
+# Whitenoise configuration
+WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
+WHITENOISE_MANIFEST_STRICT = False
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Cloudinary configuration
-cloudinary.config(
-    cloud_name=config('CLOUDINARY_CLOUD_NAME', default='dxxm9agbb'),
-    api_key=config('CLOUDINARY_API_KEY', default='296675898998215'),
-    api_secret=config('CLOUDINARY_API_SECRET', default='oQ3TOPYOncCs_-QVMPcKE-CIo98')
-)
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default='dxxm9agbb'),
-    'API_KEY': config('CLOUDINARY_API_KEY', default='296675898998215'),
-    'API_SECRET': config('CLOUDINARY_API_SECRET', default='oQ3TOPYOncCs_-QVMPcKE-CIo98'),
-}
-
-# Media files configuration
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Authentication settings
 LOGIN_URL = 'login'
@@ -205,7 +202,7 @@ CACHE_MIDDLEWARE_SECONDS = 300
 CACHE_MIDDLEWARE_KEY_PREFIX = 'menumaghreb'
 
 # Static files compression
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # Compression settings
 COMPRESS_ENABLED = True
@@ -226,106 +223,45 @@ X_FRAME_OPTIONS = 'DENY'
 META_DESCRIPTION = "Create beautiful digital menus with QR codes for your restaurant. Enhance your customer's dining experience with MenuMaghreb."
 META_KEYWORDS = "digital menu, restaurant QR code, online menu, contactless menu, restaurant management"
 
-# Jazzmin Settings
+# Jazzmin settings
 JAZZMIN_SETTINGS = {
-    # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": "MenuMaghreb Admin",
-    # Title on the login screen (19 chars max) (will default to current_admin_site.site_header if absent or None)
     "site_header": "MenuMaghreb",
-    # Title on the brand (19 chars max) (will default to current_admin_site.site_header if absent or None)
     "site_brand": "MenuMaghreb",
-    # Logo to use for your site, must be present in static files
     "site_logo": None,
-    # CSS classes that are applied to the logo
-    "site_logo_classes": None,
-    # Relative path to a favicon for your site, will default to site_logo if absent (ideally 32x32 px)
-    "site_icon": None,
-    # Welcome text on the login screen
     "welcome_sign": "Welcome to MenuMaghreb",
-    # Copyright on the footer
-    "copyright": "MenuMaghreb Ltd",
-    # The model admin to search from the search bar
-    "search_model": "restaurants.Restaurant",
-    # Field name on user model that contains avatar ImageField/URLField/Charfield or a callable that receives the user
+    "copyright": "MenuMaghreb",
+    "search_model": ["auth.User", "restaurants.Restaurant"],
     "user_avatar": None,
-    ############
-    # Top Menu #
-    ############
-    # Links to put along the top menu
-    "topmenu_links": [
-        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "View Site", "url": "/", "new_window": True},
-    ],
-    #############
-    # Side Menu #
-    #############
-    # Whether to display the side menu
     "show_sidebar": True,
-    # Whether to aut expand the menu
     "navigation_expanded": True,
-    # Custom icons for side menu apps/models
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "restaurants.Restaurant": "fas fa-store",
-        "restaurants.MenuCategory": "fas fa-list",
-        "restaurants.MenuItem": "fas fa-utensils",
-        "restaurants.Subscription": "fas fa-crown",
-    },
-    # Icons that are used when one is not manually specified
-    "default_icon_parents": "fas fa-folder",
-    "default_icon_children": "fas fa-file",
-    #################
-    # Related Modal #
-    #################
-    # Use modals instead of popups
-    "related_modal_active": True,
-    #############
-    # UI Tweaks #
-    #############
-    # Relative paths to custom CSS/JS scripts (must be present in static files)
+    "hide_apps": [],
+    "hide_models": [],
     "custom_css": None,
     "custom_js": None,
-    # Whether to show the UI customizer on the sidebar
+    "use_google_fonts_cdn": True,
     "show_ui_builder": False,
-    ###############
-    # Change view #
-    ###############
-    # Render out the change view as a single form, or in tabs, current options are
-    # - single
-    # - horizontal_tabs (default)
-    # - vertical_tabs
-    # - collapsible
-    # - carousel
     "changeform_format": "horizontal_tabs",
-    # override change forms on a per modeladmin basis
-    "changeform_format_overrides": {
-        "auth.user": "collapsible",
-        "auth.group": "vertical_tabs",
-    },
-    # Add a language dropdown into the admin
-    "language_chooser": False,
+    "related_modal_active": True,
 }
 
-# UI Customizer
 JAZZMIN_UI_TWEAKS = {
     "navbar_small_text": False,
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-primary",
+    "brand_colour": "navbar-success",
     "accent": "accent-primary",
     "navbar": "navbar-dark",
     "no_navbar_border": False,
-    "navbar_fixed": True,
+    "navbar_fixed": False,
     "layout_boxed": False,
     "footer_fixed": False,
-    "sidebar_fixed": True,
+    "sidebar_fixed": False,
     "sidebar": "sidebar-dark-primary",
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": True,
+    "sidebar_nav_child_indent": False,
     "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
@@ -338,8 +274,7 @@ JAZZMIN_UI_TWEAKS = {
         "warning": "btn-warning",
         "danger": "btn-danger",
         "success": "btn-success"
-    },
-    "actions_sticky_top": False
+    }
 }
 
 # Logging Configuration
