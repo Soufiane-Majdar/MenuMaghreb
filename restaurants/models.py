@@ -1,11 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
-from colorfield.fields import ColorField
+from cloudinary.models import CloudinaryField
 import qrcode
 from io import BytesIO
 from django.core.files import File
 from PIL import Image
 from django.utils import timezone
+from django.urls import reverse
+from django.utils.text import slugify
+import cloudinary.uploader
 
 def restaurant_logo_path(instance, filename):
     # File will be uploaded to media/restaurant_logos/filename
@@ -79,18 +82,19 @@ class Restaurant(models.Model):
     description = models.TextField(blank=True)
     address = models.TextField()
     phone = models.CharField(max_length=20)
-    logo = models.ImageField(upload_to=restaurant_logo_path, null=True, blank=True, max_length=255)
-    cover_image = models.ImageField(upload_to=restaurant_cover_path, null=True, blank=True, max_length=255)
-    qr_code = models.ImageField(upload_to=restaurant_qr_path, blank=True, null=True, max_length=255)
+    email = models.EmailField(blank=True, null=True)
+    logo = CloudinaryField('logo', folder='restaurant_logos', blank=True, null=True)
+    cover_image = CloudinaryField('cover_image', folder='restaurant_covers', blank=True, null=True)
+    qr_code = CloudinaryField('qr_code', folder='restaurant_qr_codes', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     # Theme Settings
-    primary_color = ColorField(format='hexa', default='#007bff')
-    secondary_color = ColorField(format='hexa', default='#6c757d')
-    background_color = ColorField(format='hexa', default='#ffffff')
-    text_color = ColorField(format='hexa', default='#212529')
-    accent_color = ColorField(format='hexa', default='#17a2b8')
+    primary_color = models.CharField(max_length=7, default='#007bff')
+    secondary_color = models.CharField(max_length=7, default='#6c757d')
+    background_color = models.CharField(max_length=7, default='#ffffff')
+    text_color = models.CharField(max_length=7, default='#212529')
+    accent_color = models.CharField(max_length=7, default='#17a2b8')
     font_family = models.CharField(
         max_length=50,
         choices=[
@@ -117,31 +121,45 @@ class Restaurant(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        # Generate QR code for the menu
+        # First save to ensure we have an ID
+        super().save(*args, **kwargs)
+        
+        # Generate QR code if it doesn't exist
         if not self.qr_code:
+            # Get the absolute URL for the restaurant's menu
+            menu_url = f"http://127.0.0.1:8000{reverse('menu_view', args=[self.id])}"
+            
+            # Create QR code instance
             qr = qrcode.QRCode(
                 version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
                 box_size=10,
                 border=4,
             )
-            # Use request.build_absolute_uri in views instead of hardcoding the URL
-            menu_url = f'/menu/{self.id}/'
             qr.add_data(menu_url)
             qr.make(fit=True)
-
+            
+            # Create image from QR code
             qr_image = qr.make_image(fill_color="black", back_color="white")
             
-            # Convert to RGB if necessary
-            if qr_image.mode != 'RGB':
-                qr_image = qr_image.convert('RGB')
+            # Save QR code to BytesIO
+            buffer = BytesIO()
+            qr_image.save(buffer, format='PNG')
+            buffer.seek(0)
             
-            # Save QR code
-            qr_buffer = BytesIO()
-            qr_image.save(qr_buffer, format='PNG')
-            qr_buffer.seek(0)
-            self.qr_code.save(f'menu_qr_{self.id}.png',
-                            File(qr_buffer), save=False)
+            # Upload to Cloudinary
+            cloudinary_response = cloudinary.uploader.upload(
+                buffer,
+                folder='restaurant_qr_codes',
+                public_id=f'qr_code_{self.id}',
+                overwrite=True
+            )
+            
+            # Update the qr_code field with the Cloudinary URL
+            self.qr_code = cloudinary_response['secure_url']
+            
+            # Save again to update the QR code field
+            super().save(*args, **kwargs)
 
         # Optimize logo if it exists and has changed
         if self.logo and hasattr(self.logo, 'file'):
@@ -183,8 +201,6 @@ class Restaurant(models.Model):
             cover_io.seek(0)
             self.cover_image.save(self.cover_image.name.split('/')[-1], File(cover_io), save=False)
 
-        super().save(*args, **kwargs)
-
 class MenuCategory(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='categories')
     name = models.CharField(max_length=100)
@@ -202,7 +218,7 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to=menu_item_path, blank=True, null=True, max_length=255)
+    image = CloudinaryField('image', folder='menu_items', blank=True, null=True)
     is_available = models.BooleanField(default=True)
     order = models.IntegerField(default=0)
     
@@ -224,32 +240,48 @@ class Table(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='tables')
     table_number = models.CharField(max_length=50)
     seats = models.IntegerField(default=2)
-    qr_code = models.ImageField(upload_to=table_qr_path, blank=True)
-
-    def __str__(self):
-        return f"{self.restaurant.name} - Table {self.table_number}"
+    qr_code = CloudinaryField('qr_code', folder='table_qr_codes', blank=True)
 
     def save(self, *args, **kwargs):
+        # First save to ensure we have an ID
+        super().save(*args, **kwargs)
+        
+        # Generate QR code if it doesn't exist
         if not self.qr_code:
+            # Get the absolute URL for the table's menu
+            menu_url = f"http://127.0.0.1:8000{reverse('menu_view', args=[self.restaurant.id])}?table={self.table_number}"
+            
+            # Create QR code instance
             qr = qrcode.QRCode(
                 version=1,
                 error_correction=qrcode.constants.ERROR_CORRECT_L,
                 box_size=10,
                 border=4,
             )
-            qr.add_data(f'table/{self.id}')
+            qr.add_data(menu_url)
             qr.make(fit=True)
-
+            
+            # Create image from QR code
             qr_image = qr.make_image(fill_color="black", back_color="white")
             
-            # Convert to RGB if necessary
-            if qr_image.mode != 'RGB':
-                qr_image = qr_image.convert('RGB')
-            
-            # Save QR code
+            # Save QR code to BytesIO
             buffer = BytesIO()
             qr_image.save(buffer, format='PNG')
-            self.qr_code.save(f'qr_code_{self.restaurant.id}_{self.table_number}.png',
-                            File(buffer), save=False)
-        
-        super().save(*args, **kwargs)
+            buffer.seek(0)
+            
+            # Upload to Cloudinary
+            cloudinary_response = cloudinary.uploader.upload(
+                buffer,
+                folder='table_qr_codes',
+                public_id=f'table_qr_code_{self.restaurant.id}_{self.table_number}',
+                overwrite=True
+            )
+            
+            # Update the qr_code field with the Cloudinary URL
+            self.qr_code = cloudinary_response['secure_url']
+            
+            # Save again to update the QR code field
+            super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.restaurant.name} - Table {self.table_number}"

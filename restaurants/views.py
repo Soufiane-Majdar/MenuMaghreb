@@ -8,6 +8,7 @@ from .models import Restaurant, MenuCategory, MenuItem, Table, Subscription
 from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThemeForm, CustomUserCreationForm
 from django.core.mail import send_mail
 from django.conf import settings
+from .decorators import cache_page_for_restaurant, cache_menu_page
 
 # Create your views here.
 
@@ -17,6 +18,7 @@ def landing(request):
     return render(request, 'restaurants/landing.html')
 
 @login_required
+@cache_page_for_restaurant(timeout=300)
 def dashboard(request):
     # Get or create subscription
     subscription, created = Subscription.objects.get_or_create(
@@ -95,6 +97,7 @@ def restaurant_edit(request, pk):
     return render(request, 'restaurants/restaurant_form.html', context)
 
 @login_required
+@cache_page_for_restaurant(timeout=300)
 def restaurant_detail(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
     return render(request, 'restaurants/restaurant_detail.html', {'restaurant': restaurant})
@@ -126,6 +129,7 @@ def restaurant_menu_edit(request, restaurant_id):
     }
     return render(request, 'restaurants/restaurant_menu_edit.html', context)
 
+@cache_menu_page(timeout=3600)
 def menu_view(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
     categories = MenuCategory.objects.filter(restaurant=restaurant).prefetch_related('items')
