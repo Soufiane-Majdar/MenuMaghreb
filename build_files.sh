@@ -10,7 +10,7 @@ python3.12 manage.py migrate
 # mkdir -p staticfiles
 
 # Collect static files
-python3.12 manage.py collectstatic --noinput 
+# python3.12 manage.py collectstatic --noinput 
 
 # # Copy admin static files
 # cp -r /usr/local/lib/python3.12/site-packages/django/contrib/admin/static/admin staticfiles/static/
