@@ -257,15 +257,26 @@ def delete_category(request, restaurant_id, category_id):
 def item_create(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
     if request.method == 'POST':
-        form = MenuItemForm(request.POST, request.FILES)
+        form = MenuItemForm(request.POST, request.FILES, restaurant=restaurant)
         if form.is_valid():
             item = form.save(commit=False)
-            item.restaurant = restaurant
+            category = form.cleaned_data['category']
+            item.category = category
             item.save()
             messages.success(request, 'Menu item created successfully!')
             return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
     else:
-        form = MenuItemForm()
+        form = MenuItemForm(restaurant=restaurant)
+        
+    # Get the category from query parameters if provided
+    category_id = request.GET.get('category')
+    if category_id:
+        try:
+            category = MenuCategory.objects.get(id=category_id, restaurant=restaurant)
+            form.initial['category'] = category
+        except MenuCategory.DoesNotExist:
+            pass
+            
     return render(request, 'restaurants/item_form.html', {
         'form': form,
         'restaurant': restaurant,

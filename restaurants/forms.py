@@ -145,19 +145,40 @@ class MenuCategoryForm(forms.ModelForm):
 class MenuItemForm(forms.ModelForm):
     class Meta:
         model = MenuItem
-        fields = ['category', 'name', 'description', 'price', 'image', 'is_available', 'order']
+        fields = ['category', 'name', 'description', 'price', 'image', 'is_available', 'order', 'is_vegetarian', 'is_vegan', 'is_gluten_free']
         widgets = {
             'price': forms.NumberInput(attrs={'min': 0, 'step': '0.01'}),
             'order': forms.NumberInput(attrs={'min': 0}),
-            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_vegetarian': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_vegan': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_gluten_free': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
 
     def __init__(self, *args, restaurant=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.restaurant = restaurant
         if restaurant:
             self.fields['category'].queryset = MenuCategory.objects.filter(restaurant=restaurant)
         elif self.instance and self.instance.category:
             self.fields['category'].queryset = MenuCategory.objects.filter(restaurant=self.instance.category.restaurant)
+        
+        # Make fields required and add help text
+        self.fields['name'].required = True
+        self.fields['price'].required = True
+        self.fields['category'].required = True
+        self.fields['description'].required = False
+        
+        # Add help text
+        self.fields['price'].help_text = 'Enter the price in your local currency'
+        self.fields['image'].help_text = 'Upload an image of the menu item (optional)'
+        self.fields['order'].help_text = 'Order in which this item appears (lower numbers appear first)'
+
+    def clean_category(self):
+        category = self.cleaned_data.get('category')
+        if category and self.restaurant and category.restaurant != self.restaurant:
+            raise forms.ValidationError("This category doesn't belong to the selected restaurant.")
+        return category
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)

@@ -4,12 +4,12 @@
 {% block extra_css %}
 <style>
     :root {
-        --primary-color: {{ restaurant.primary_color }};
-        --secondary-color: {{ restaurant.secondary_color }};
-        --background-color: {{ restaurant.background_color }};
-        --text-color: {{ restaurant.text_color }};
-        --accent-color: {{ restaurant.accent_color }};
-        --font-family: {{ restaurant.font_family }}, system-ui, -apple-system, sans-serif;
+        --primary-color: {{ restaurant.primary_color|default:'#2563EB' }};
+        --secondary-color: {{ restaurant.secondary_color|default:'#4B5563' }};
+        --background-color: {{ restaurant.background_color|default:'#F3F4F6' }};
+        --text-color: {{ restaurant.text_color|default:'#1F2937' }};
+        --accent-color: {{ restaurant.accent_color|default:'#10B981' }};
+        --font-family: {{ restaurant.font_family|default:'system-ui' }}, -apple-system, sans-serif;
     }
 
     body {
