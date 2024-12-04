@@ -56,3 +56,7 @@ INFO 2024-12-04 11:50:01,891 forms 104127 134046868829888 Saving restaurant inst
 INFO 2024-12-04 11:50:01,891 forms 104127 134046868829888 Saving restaurant instance: MenuMaghreb
 WARNING 2024-12-04 11:50:05,308 log 104127 134046868829888 Not Found: /favicon.ico
 WARNING 2024-12-04 11:50:11,109 log 104127 134046868829888 Not Found: /favicon.ico
+INFO 2024-12-04 12:05:18,057 autoreload 104127 134047039286144 /home/sofiane/CascadeProjects/qr_menu_platform/qr_menu_core/settings.py changed, reloading.
+INFO 2024-12-04 12:05:19,143 autoreload 107079 133845234776960 Watching for file changes with StatReloader
+INFO 2024-12-04 12:05:20,553 autoreload 107079 133845234776960 /home/sofiane/CascadeProjects/qr_menu_platform/qr_menu_core/settings.py changed, reloading.
+INFO 2024-12-04 12:05:21,782 autoreload 107101 125169291443072 Watching for file changes with StatReloader
