@@ -1,0 +1,51 @@
+INFO 2024-12-04 11:13:24,453 autoreload 100592 134344587795328 Watching for file changes with StatReloader
+INFO 2024-12-04 11:13:41,256 autoreload 100592 134344587795328 /home/sofiane/CascadeProjects/qr_menu_platform/restaurants/forms.py changed, reloading.
+INFO 2024-12-04 11:13:42,647 autoreload 100695 130822510898048 Watching for file changes with StatReloader
+INFO 2024-12-04 11:31:56,531 autoreload 100695 130822510898048 /home/sofiane/CascadeProjects/qr_menu_platform/qr_menu_core/settings.py changed, reloading.
+INFO 2024-12-04 11:31:57,700 autoreload 101321 136890634759040 Watching for file changes with StatReloader
+INFO 2024-12-04 11:32:13,646 autoreload 101321 136890634759040 /home/sofiane/CascadeProjects/qr_menu_platform/restaurants/views.py changed, reloading.
+INFO 2024-12-04 11:32:14,329 autoreload 101398 134219148340096 Watching for file changes with StatReloader
+INFO 2024-12-04 11:32:34,416 autoreload 101398 134219148340096 /home/sofiane/CascadeProjects/qr_menu_platform/restaurants/models.py changed, reloading.
+INFO 2024-12-04 11:32:35,069 autoreload 101476 137824215501696 Watching for file changes with StatReloader
+WARNING 2024-12-04 11:33:39,494 log 101476 137824117450432 Not Found: /favicon.ico
+INFO 2024-12-04 11:33:42,347 views 101476 137824117450432 Starting restaurant creation process
+INFO 2024-12-04 11:33:42,347 views 101476 137824117450432 Starting restaurant creation process
+INFO 2024-12-04 11:33:42,963 views 101476 137824117450432 Displaying empty restaurant creation form
+INFO 2024-12-04 11:33:42,963 views 101476 137824117450432 Displaying empty restaurant creation form
+WARNING 2024-12-04 11:34:11,383 log 101476 137824105912000 Not Found: /favicon.ico
+INFO 2024-12-04 11:35:18,610 views 101476 137824117450432 Starting restaurant creation process
+INFO 2024-12-04 11:35:18,610 views 101476 137824117450432 Starting restaurant creation process
+INFO 2024-12-04 11:35:19,320 views 101476 137824117450432 Processing POST request for restaurant creation by user sofianeMjs
+INFO 2024-12-04 11:35:19,320 views 101476 137824117450432 Processing POST request for restaurant creation by user sofianeMjs
+INFO 2024-12-04 11:35:19,322 views 101476 137824117450432 Form data: <QueryDict: {'csrfmiddlewaretoken': ['SuKjb9Zc8bxgb4PqU6GBmYth6d3BU1tuZJ0xIyI2dwTx37R4pLkmBCiYvOVBtaMQ'], 'name': [' MenuMaghreb'], 'phone': ['0613613508'], 'address': ['Transform Your Menu Into a Digital Experience'], 'description': ['Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.']}>
+INFO 2024-12-04 11:35:19,322 views 101476 137824117450432 Form data: <QueryDict: {'csrfmiddlewaretoken': ['SuKjb9Zc8bxgb4PqU6GBmYth6d3BU1tuZJ0xIyI2dwTx37R4pLkmBCiYvOVBtaMQ'], 'name': [' MenuMaghreb'], 'phone': ['0613613508'], 'address': ['Transform Your Menu Into a Digital Experience'], 'description': ['Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.']}>
+INFO 2024-12-04 11:35:19,323 views 101476 137824117450432 Files: <MultiValueDict: {'logo': [<InMemoryUploadedFile: logo.jpg (image/jpeg)>], 'cover_image': [<InMemoryUploadedFile: p3.png (image/png)>]}>
+INFO 2024-12-04 11:35:19,323 views 101476 137824117450432 Files: <MultiValueDict: {'logo': [<InMemoryUploadedFile: logo.jpg (image/jpeg)>], 'cover_image': [<InMemoryUploadedFile: p3.png (image/png)>]}>
+INFO 2024-12-04 11:35:19,325 forms 101476 137824117450432 Cleaning form data: {'name': 'MenuMaghreb', 'description': 'Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.', 'address': 'Transform Your Menu Into a Digital Experience', 'phone': '0613613508', 'email': None, 'logo': <InMemoryUploadedFile: logo.jpg (image/jpeg)>, 'cover_image': <InMemoryUploadedFile: p3.png (image/png)>}
+INFO 2024-12-04 11:35:19,325 forms 101476 137824117450432 Cleaning form data: {'name': 'MenuMaghreb', 'description': 'Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.', 'address': 'Transform Your Menu Into a Digital Experience', 'phone': '0613613508', 'email': None, 'logo': <InMemoryUploadedFile: logo.jpg (image/jpeg)>, 'cover_image': <InMemoryUploadedFile: p3.png (image/png)>}
+ERROR 2024-12-04 11:35:19,332 views 101476 137824117450432 Form validation failed: <ul class="errorlist"><li>primary_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>secondary_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>background_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>text_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>accent_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>font_family<ul class="errorlist"><li>This field is required.</li></ul></li><li>menu_style<ul class="errorlist"><li>This field is required.</li></ul></li></ul>
+ERROR 2024-12-04 11:35:19,332 views 101476 137824117450432 Form validation failed: <ul class="errorlist"><li>primary_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>secondary_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>background_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>text_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>accent_color<ul class="errorlist"><li>This field is required.</li></ul></li><li>font_family<ul class="errorlist"><li>This field is required.</li></ul></li><li>menu_style<ul class="errorlist"><li>This field is required.</li></ul></li></ul>
+INFO 2024-12-04 11:36:35,590 autoreload 101476 137824215501696 /home/sofiane/CascadeProjects/qr_menu_platform/restaurants/models.py changed, reloading.
+INFO 2024-12-04 11:36:40,774 autoreload 102210 136619930479488 Watching for file changes with StatReloader
+INFO 2024-12-04 11:36:58,205 autoreload 102210 136619930479488 /home/sofiane/CascadeProjects/qr_menu_platform/restaurants/forms.py changed, reloading.
+INFO 2024-12-04 11:37:04,016 autoreload 102354 139635073084288 Watching for file changes with StatReloader
+INFO 2024-12-04 11:37:16,776 views 102354 139634975696576 Starting restaurant creation process
+INFO 2024-12-04 11:37:16,776 views 102354 139634975696576 Starting restaurant creation process
+INFO 2024-12-04 11:37:17,393 views 102354 139634975696576 Processing POST request for restaurant creation by user sofianeMjs
+INFO 2024-12-04 11:37:17,393 views 102354 139634975696576 Processing POST request for restaurant creation by user sofianeMjs
+INFO 2024-12-04 11:37:17,397 views 102354 139634975696576 Form data: <QueryDict: {'csrfmiddlewaretoken': ['SuKjb9Zc8bxgb4PqU6GBmYth6d3BU1tuZJ0xIyI2dwTx37R4pLkmBCiYvOVBtaMQ'], 'name': [' MenuMaghreb'], 'phone': ['0613613508'], 'address': ['Transform Your Menu Into a Digital Experience'], 'description': ['Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.']}>
+INFO 2024-12-04 11:37:17,397 views 102354 139634975696576 Form data: <QueryDict: {'csrfmiddlewaretoken': ['SuKjb9Zc8bxgb4PqU6GBmYth6d3BU1tuZJ0xIyI2dwTx37R4pLkmBCiYvOVBtaMQ'], 'name': [' MenuMaghreb'], 'phone': ['0613613508'], 'address': ['Transform Your Menu Into a Digital Experience'], 'description': ['Create beautiful digital menus with QR codes in minutes. Modern, contactless, and always up-to-date.']}>
+INFO 2024-12-04 11:37:17,400 views 102354 139634975696576 Files: <MultiValueDict: {'logo': [<InMemoryUploadedFile: logo.jpg (image/jpeg)>], 'cover_image': [<InMemoryUploadedFile: p3.png (image/png)>]}>
+INFO 2024-12-04 11:37:17,400 views 102354 139634975696576 Files: <MultiValueDict: {'logo': [<InMemoryUploadedFile: logo.jpg (image/jpeg)>], 'cover_image': [<InMemoryUploadedFile: p3.png (image/png)>]}>
+INFO 2024-12-04 11:37:17,401 views 102354 139634975696576 Form is valid, proceeding with save
+INFO 2024-12-04 11:37:17,401 views 102354 139634975696576 Form is valid, proceeding with save
+INFO 2024-12-04 11:37:17,403 forms 102354 139634975696576 Saving restaurant instance: MenuMaghreb
+INFO 2024-12-04 11:37:17,403 forms 102354 139634975696576 Saving restaurant instance: MenuMaghreb
+INFO 2024-12-04 11:37:22,508 views 102354 139634975696576 Successfully created restaurant: MenuMaghreb
+INFO 2024-12-04 11:37:22,508 views 102354 139634975696576 Successfully created restaurant: MenuMaghreb
+WARNING 2024-12-04 11:37:28,356 log 102354 139634975696576 Not Found: /favicon.ico
+WARNING 2024-12-04 11:37:35,272 log 102354 139634975696576 Not Found: /favicon.ico
+WARNING 2024-12-04 11:37:53,446 log 102354 139634975696576 Not Found: /admin pannel
+WARNING 2024-12-04 11:40:18,229 log 102354 139634856146624 Not Found: /favicon.ico
+WARNING 2024-12-04 11:40:21,111 log 102354 139634856146624 Not Found: /favicon.ico
+WARNING 2024-12-04 11:40:34,928 log 102354 139634856146624 Not Found: /favicon.ico

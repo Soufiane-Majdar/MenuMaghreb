@@ -9,6 +9,9 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.text import slugify
 import cloudinary.uploader
+import logging
+
+logger = logging.getLogger(__name__)
 
 def restaurant_logo_path(instance, filename):
     # File will be uploaded to media/restaurant_logos/filename
@@ -89,77 +92,105 @@ class Restaurant(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Theme Settings
-    primary_color = models.CharField(max_length=7, default='#007bff')
-    secondary_color = models.CharField(max_length=7, default='#6c757d')
-    background_color = models.CharField(max_length=7, default='#ffffff')
-    text_color = models.CharField(max_length=7, default='#212529')
-    accent_color = models.CharField(max_length=7, default='#17a2b8')
+    # Theme Colors - Modern defaults
+    primary_color = models.CharField(
+        max_length=7,
+        default='#2563EB',  # Modern blue
+        help_text='Main brand color, used for headers and primary buttons'
+    )
+    secondary_color = models.CharField(
+        max_length=7,
+        default='#4B5563',  # Slate gray
+        help_text='Secondary color for accents and secondary buttons'
+    )
+    background_color = models.CharField(
+        max_length=7,
+        default='#F3F4F6',  # Light gray
+        help_text='Background color of the menu'
+    )
+    text_color = models.CharField(
+        max_length=7,
+        default='#1F2937',  # Dark gray
+        help_text='Main text color'
+    )
+    accent_color = models.CharField(
+        max_length=7,
+        default='#10B981',  # Emerald green
+        help_text='Used for highlights and call-to-action elements'
+    )
+    
+    # Typography and Layout
     font_family = models.CharField(
         max_length=50,
         choices=[
-            ('Roboto', 'Roboto'),
-            ('Open Sans', 'Open Sans'),
-            ('Lato', 'Lato'),
-            ('Poppins', 'Poppins'),
-            ('Montserrat', 'Montserrat'),
+            ('Poppins', 'Poppins'),  # Modern, clean font
+            ('Montserrat', 'Montserrat'),  # Professional, modern
+            ('Open Sans', 'Open Sans'),  # Highly readable
+            ('Roboto', 'Roboto'),  # Clean and modern
+            ('Lato', 'Lato'),  # Friendly and natural
         ],
-        default='Roboto'
+        default='Poppins',
+        help_text='Main font family for the menu'
     )
+    
     menu_style = models.CharField(
         max_length=20,
         choices=[
-            ('modern', 'Modern Grid'),
-            ('classic', 'Classic List'),
-            ('elegant', 'Elegant Cards'),
-            ('minimal', 'Minimal'),
+            ('modern', 'Modern Grid'),  # Default, modern card-based layout
+            ('elegant', 'Elegant Cards'),  # Sophisticated layout with more whitespace
+            ('classic', 'Classic List'),  # Traditional list view
+            ('minimal', 'Minimal'),  # Clean, minimalist design
         ],
-        default='modern'
+        default='modern',
+        help_text='Overall layout style of the menu'
     )
     
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
-        # First save to ensure we have an ID
+        is_new = self._state.adding
         super().save(*args, **kwargs)
-        
-        # Generate QR code if it doesn't exist
-        if not self.qr_code:
-            # Get the absolute URL for the restaurant's menu
-            menu_url = f"http://127.0.0.1:8000{reverse('menu_view', args=[self.id])}"
-            
-            # Create QR code instance
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(menu_url)
-            qr.make(fit=True)
-            
-            # Create image from QR code
-            qr_image = qr.make_image(fill_color="black", back_color="white")
-            
-            # Save QR code to BytesIO
-            buffer = BytesIO()
-            qr_image.save(buffer, format='PNG')
-            buffer.seek(0)
-            
-            # Upload to Cloudinary
-            cloudinary_response = cloudinary.uploader.upload(
-                buffer,
-                folder='restaurant_qr_codes',
-                public_id=f'qr_code_{self.id}',
-                overwrite=True
-            )
-            
-            # Update the qr_code field with the Cloudinary URL
-            self.qr_code = cloudinary_response['secure_url']
-            
-            # Save again to update the QR code field
-            super().save(*args, **kwargs)
+
+        if is_new or not self.qr_code:
+            try:
+                # Generate QR code
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=4,
+                )
+                menu_url = f"https://your-domain.com/menu/{self.id}/"  # Replace with your actual domain
+                qr.add_data(menu_url)
+                qr.make(fit=True)
+
+                # Create QR code image
+                qr_image = qr.make_image(fill_color="black", back_color="white")
+                
+                # Convert to RGB if necessary
+                if qr_image.mode != 'RGB':
+                    qr_image = qr_image.convert('RGB')
+                
+                # Save to BytesIO
+                buffer = BytesIO()
+                qr_image.save(buffer, format='PNG')
+                buffer.seek(0)
+
+                # Upload to Cloudinary
+                upload_result = cloudinary.uploader.upload(
+                    buffer,
+                    folder='restaurant_qr_codes',
+                    public_id=f'qr_code_{self.id}',
+                    overwrite=True
+                )
+
+                # Update the qr_code field without triggering another save
+                self.qr_code = upload_result['url']
+                type(self).objects.filter(pk=self.pk).update(qr_code=upload_result['url'])
+                
+            except Exception as e:
+                logger.error(f"Error generating QR code for restaurant {self.id}: {str(e)}")
 
         # Optimize logo if it exists and has changed
         if self.logo and hasattr(self.logo, 'file'):

@@ -9,6 +9,9 @@ from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThe
 from django.core.mail import send_mail
 from django.conf import settings
 from .decorators import cache_page_for_restaurant, cache_menu_page
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -48,22 +51,57 @@ def dashboard(request):
 
 @login_required
 def restaurant_create(request):
+    logger.info("Starting restaurant creation process")
     subscription = get_object_or_404(Subscription, user=request.user)
     
     if not subscription.can_create_restaurant():
+        logger.warning(f"User {request.user.username} exceeded restaurant limit for subscription plan {subscription.plan}")
         messages.error(request, 'You have reached the maximum number of restaurants for your subscription plan.')
         return redirect('dashboard')
     
     if request.method == 'POST':
+        logger.info(f"Processing POST request for restaurant creation by user {request.user.username}")
         form = RestaurantForm(request.POST, request.FILES)
+        logger.info(f"Form data: {request.POST}")
+        logger.info(f"Files: {request.FILES}")
+        
         if form.is_valid():
-            restaurant = form.save(commit=False)
-            restaurant.owner = request.user
-            restaurant.save()
-            messages.success(request, 'Restaurant created successfully!')
-            return redirect('dashboard')
+            logger.info("Form is valid, proceeding with save")
+            try:
+                restaurant = form.save(commit=False)
+                restaurant.owner = request.user
+                
+                # Set default values for required fields if not provided
+                if not restaurant.primary_color:
+                    restaurant.primary_color = '#007bff'
+                if not restaurant.secondary_color:
+                    restaurant.secondary_color = '#6c757d'
+                if not restaurant.background_color:
+                    restaurant.background_color = '#ffffff'
+                if not restaurant.text_color:
+                    restaurant.text_color = '#212529'
+                if not restaurant.accent_color:
+                    restaurant.accent_color = '#17a2b8'
+                if not restaurant.font_family:
+                    restaurant.font_family = 'Roboto'
+                if not restaurant.menu_style:
+                    restaurant.menu_style = 'modern'
+                
+                restaurant.save()
+                logger.info(f"Successfully created restaurant: {restaurant.name}")
+                messages.success(request, 'Restaurant created successfully!')
+                return redirect('dashboard')
+            except Exception as e:
+                logger.error(f"Error saving restaurant: {str(e)}", exc_info=True)
+                messages.error(request, f"Error creating restaurant: {str(e)}")
+        else:
+            logger.error(f"Form validation failed: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = RestaurantForm()
+        logger.info("Displaying empty restaurant creation form")
     
     context = {
         'form': form,

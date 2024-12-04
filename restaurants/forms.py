@@ -3,6 +3,9 @@ from .models import Restaurant, MenuCategory, MenuItem
 from colorfield.widgets import ColorWidget
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 FONT_CHOICES = [
     ('Arial', 'Arial'),
@@ -19,27 +22,72 @@ MENU_STYLE_CHOICES = [
 ]
 
 class RestaurantForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make theme fields optional for free plan users
+        theme_fields = ['primary_color', 'secondary_color', 'background_color', 
+                       'text_color', 'accent_color', 'font_family', 'menu_style']
+        for field in theme_fields:
+            self.fields[field].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Set default values for any missing theme fields
+        defaults = {
+            'primary_color': '#2563EB',  # Modern blue
+            'secondary_color': '#4B5563',  # Slate gray
+            'background_color': '#F3F4F6',  # Light gray
+            'text_color': '#1F2937',  # Dark gray
+            'accent_color': '#10B981',  # Emerald green
+            'font_family': 'Poppins',
+            'menu_style': 'modern'
+        }
+        
+        for field, default_value in defaults.items():
+            if not cleaned_data.get(field):
+                cleaned_data[field] = default_value
+        
+        return cleaned_data
+
+    def save(self, commit=True):
+        try:
+            instance = super().save(commit=False)
+            logger.info(f"Saving restaurant instance: {instance}")
+            if commit:
+                instance.save()
+            return instance
+        except Exception as e:
+            logger.error(f"Error saving restaurant form: {str(e)}")
+            raise
+
     class Meta:
         model = Restaurant
         fields = [
-            'name', 'description', 'address', 'phone',
+            'name', 'description', 'address', 'phone', 'email',
             'logo', 'cover_image',
             'primary_color', 'secondary_color', 'background_color',
             'text_color', 'accent_color',
             'font_family', 'menu_style'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'address': forms.Textarea(attrs={'rows': 2}),
-            'primary_color': ColorWidget(),
-            'secondary_color': ColorWidget(),
-            'background_color': ColorWidget(),
-            'text_color': ColorWidget(),
-            'accent_color': ColorWidget(),
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+1 (555) 123-4567'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'restaurant@example.com'}),
+            'primary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
+            'secondary_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
+            'background_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
+            'text_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
+            'accent_color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
             'font_family': forms.Select(attrs={'class': 'form-select'}),
             'menu_style': forms.Select(attrs={'class': 'form-select'})
         }
         labels = {
+            'name': 'Restaurant Name',
+            'description': 'Description',
+            'address': 'Address',
+            'phone': 'Phone Number',
+            'email': 'Email (Optional)',
             'logo': 'Restaurant Logo',
             'cover_image': 'Cover Image',
             'primary_color': 'Primary Brand Color',
@@ -51,15 +99,17 @@ class RestaurantForm(forms.ModelForm):
             'menu_style': 'Menu Layout Style'
         }
         help_texts = {
-            'logo': 'Upload a square logo image (recommended size: 200x200px)',
-            'cover_image': 'Upload a wide cover image (recommended size: 1200x400px)',
-            'primary_color': 'Main brand color used for headers and buttons',
-            'secondary_color': 'Used for secondary elements',
-            'background_color': 'Background color of the menu',
-            'text_color': 'Color of the menu text',
-            'accent_color': 'Used for highlighting and special elements',
-            'font_family': 'Choose the font for your menu text',
-            'menu_style': 'Select the overall layout of your menu'
+            'name': 'The name of your restaurant as it will appear on the menu',
+            'description': 'A brief description of your restaurant',
+            'logo': 'Your restaurant\'s logo (recommended size: 200x200px)',
+            'cover_image': 'A cover image for your menu (recommended size: 1200x400px)',
+            'primary_color': 'Main color for headers and buttons',
+            'secondary_color': 'Color for secondary elements',
+            'background_color': 'Menu background color',
+            'text_color': 'Color for menu text',
+            'accent_color': 'Color for highlights and special elements',
+            'font_family': 'Choose a font that matches your brand',
+            'menu_style': 'Select how your menu items will be displayed'
         }
 
 class RestaurantThemeForm(forms.ModelForm):
