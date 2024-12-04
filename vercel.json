@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "MenuMaghreb/wsgi.py",
+      "src": "qr_menu_core/wsgi.py",
       "use": "@vercel/python",
       "config": { 
         "maxLambdaSize": "15mb", 
@@ -24,7 +24,7 @@
     },
     {
       "src": "/admin/(.*)",
-      "dest": "MenuMaghreb/wsgi.py"
+      "dest": "qr_menu_core/wsgi.py"
     },
     {
       "src": "/media/(.*)",
@@ -32,7 +32,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "MenuMaghreb/wsgi.py"
+      "dest": "qr_menu_core/wsgi.py"
     }
   ]
 }
