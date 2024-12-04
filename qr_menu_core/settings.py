@@ -132,8 +132,17 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Use WhiteNoise for static files in production
+# Static files finders
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+]
+
+# Whitenoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_MAX_AGE = 31536000
+WHITENOISE_MANIFEST_STRICT = False
 
 # Media files configuration
 MEDIA_URL = '/media/'
@@ -147,14 +156,88 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': config('CLOUDINARY_API_SECRET'),
 }
 
-# Whitenoise configuration
-WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
-WHITENOISE_MANIFEST_STRICT = False
+# Jazzmin settings
+JAZZMIN_SETTINGS = {
+    "site_title": "MenuMaghreb Admin",
+    "site_header": "MenuMaghreb",
+    "site_brand": "MenuMaghreb",
+    "site_logo": None,
+    "welcome_sign": "Welcome to MenuMaghreb Admin",
+    "copyright": "MenuMaghreb",
+    "search_model": ["auth.User", "restaurants.Restaurant"],
+    "user_avatar": None,
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "restaurants.Restaurant": "fas fa-store",
+        "restaurants.MenuCategory": "fas fa-list",
+        "restaurants.MenuItem": "fas fa-utensils",
+        "restaurants.Subscription": "fas fa-crown",
+    },
+    "default_icon_parents": "fas fa-folder",
+    "default_icon_children": "fas fa-file",
+    "related_modal_active": True,
+    "custom_css": None,
+    "custom_js": None,
+    "use_google_fonts_cdn": True,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+}
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": False,
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "darkly",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Compress settings
+COMPRESS_ENABLED = True
+COMPRESS_CSS_FILTERS = [
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    'compressor.filters.cssmin.rCSSMinFilter',
+]
+COMPRESS_JS_FILTERS = [
+    'compressor.filters.jsmin.JSMinFilter',
+]
+
+# Security headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# SEO Settings
+META_DESCRIPTION = "Create beautiful digital menus with QR codes for your restaurant. Enhance your customer's dining experience with MenuMaghreb."
+META_KEYWORDS = "digital menu, restaurant QR code, online menu, contactless menu, restaurant management"
 
 # Authentication settings
 LOGIN_URL = 'login'
@@ -201,82 +284,6 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = 300
 CACHE_MIDDLEWARE_KEY_PREFIX = 'menumaghreb'
 
-# Static files compression
-# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-
-# Compression settings
-COMPRESS_ENABLED = True
-COMPRESS_CSS_FILTERS = [
-    'compressor.filters.css_default.CssAbsoluteFilter',
-    'compressor.filters.cssmin.rCSSMinFilter',
-]
-COMPRESS_JS_FILTERS = [
-    'compressor.filters.jsmin.JSMinFilter',
-]
-
-# Security headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-
-# SEO Settings
-META_DESCRIPTION = "Create beautiful digital menus with QR codes for your restaurant. Enhance your customer's dining experience with MenuMaghreb."
-META_KEYWORDS = "digital menu, restaurant QR code, online menu, contactless menu, restaurant management"
-
-# Jazzmin settings
-JAZZMIN_SETTINGS = {
-    "site_title": "MenuMaghreb Admin",
-    "site_header": "MenuMaghreb",
-    "site_brand": "MenuMaghreb",
-    "site_logo": None,
-    "welcome_sign": "Welcome to MenuMaghreb",
-    "copyright": "MenuMaghreb",
-    "search_model": ["auth.User", "restaurants.Restaurant"],
-    "user_avatar": None,
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-    "custom_css": None,
-    "custom_js": None,
-    "use_google_fonts_cdn": True,
-    "show_ui_builder": False,
-    "changeform_format": "horizontal_tabs",
-    "related_modal_active": True,
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": "navbar-success",
-    "accent": "accent-primary",
-    "navbar": "navbar-dark",
-    "no_navbar_border": False,
-    "navbar_fixed": False,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": False,
-    "sidebar": "sidebar-dark-primary",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": False,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "default",
-    "dark_mode_theme": None,
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
-}
-
 # Logging Configuration
 LOGGING = {
     'version': 1,
@@ -309,3 +316,8 @@ LOGGING = {
         },
     },
 }
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
