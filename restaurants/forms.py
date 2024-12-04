@@ -1,6 +1,8 @@
 from django import forms
 from .models import Restaurant, MenuCategory, MenuItem
 from colorfield.widgets import ColorWidget
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 FONT_CHOICES = [
     ('Arial', 'Arial'),
@@ -106,3 +108,17 @@ class MenuItemForm(forms.ModelForm):
             self.fields['category'].queryset = MenuCategory.objects.filter(restaurant=restaurant)
         elif self.instance and self.instance.category:
             self.fields['category'].queryset = MenuCategory.objects.filter(restaurant=self.instance.category.restaurant)
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+        return user

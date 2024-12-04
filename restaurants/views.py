@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
 from .models import Restaurant, MenuCategory, MenuItem, Table, Subscription
-from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThemeForm
+from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThemeForm, CustomUserCreationForm
+from django.core.mail import send_mail
+from django.conf import settings
 
 # Create your views here.
 
@@ -15,7 +18,12 @@ def landing(request):
 
 @login_required
 def dashboard(request):
-    subscription = get_object_or_404(Subscription, user=request.user)
+    # Get or create subscription
+    subscription, created = Subscription.objects.get_or_create(
+        user=request.user,
+        defaults={'plan': 'free', 'is_active': True}
+    )
+    
     restaurants = Restaurant.objects.filter(owner=request.user)
     
     # Get stats for all restaurants
@@ -285,31 +293,98 @@ def restaurant_list(request):
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Create a free subscription for the new user
+            Subscription.objects.create(
+                user=user,
+                plan='free',
+                is_active=True
+            )
             login(request, user)
-            messages.success(request, 'Account created successfully!')
+            messages.success(request, 'Registration successful! Welcome to MenuMaghreb.')
             return redirect('dashboard')
     else:
-        form = UserCreationForm()
-    return render(request, 'registration/register.html', {'form': form})
+        form = CustomUserCreationForm()
+    return render(request, 'restaurants/register.html', {'form': form})
 
 def contact_view(request):
+    subject = request.GET.get('subject', '')
+    
     if request.method == 'POST':
-        # Get form data
         name = request.POST.get('name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
+        subject = request.POST.get('subject')
         plan = request.POST.get('plan')
         message = request.POST.get('message')
         
-        # Here you would typically send an email to your sales team
-        # For now, we'll just show a success message
-        messages.success(request, 'Thank you for contacting us! We will get back to you soon.')
-        return redirect('contact')
-    
-    return render(request, 'restaurants/contact.html')
+        # Prepare email content
+        email_subject = f'New Contact Form Submission: {subject}'
+        if plan:
+            email_subject = f'New {plan.title()} Plan Inquiry'
+            
+        email_message = f"""
+        New contact form submission from MenuMaghreb:
+        
+        Name: {name}
+        Email: {email}
+        Phone: {phone}
+        Subject: {subject}
+        Interested Plan: {plan.title() if plan else 'Not specified'}
+        
+        Message:
+        {message}
+        """
+        
+        # Send email notification with error logging
+        try:
+            print(f"Attempting to send email with settings:")
+            print(f"EMAIL_HOST: {settings.EMAIL_HOST}")
+            print(f"EMAIL_PORT: {settings.EMAIL_PORT}")
+            print(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
+            print(f"EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}")
+            
+            # Send to admin
+            send_mail(
+                email_subject,
+                email_message,
+                settings.EMAIL_HOST_USER,
+                [settings.EMAIL_HOST_USER],
+                fail_silently=False,
+            )
+            
+            # Send confirmation to user
+            user_message = f"""
+            Dear {name},
+            
+            Thank you for contacting MenuMaghreb! We have received your message and will get back to you shortly.
+            
+            Your message details:
+            Subject: {subject}
+            {f'Plan Interest: {plan.title()} Plan' if plan else ''}
+            
+            Best regards,
+            MenuMaghreb Team
+            """
+            
+            send_mail(
+                'MenuMaghreb - Message Received',
+                user_message,
+                settings.EMAIL_HOST_USER,
+                [email],
+                fail_silently=False,
+            )
+            
+            messages.success(request, 'Your message has been sent successfully! We will contact you soon.')
+            return redirect('contact')
+            
+        except Exception as e:
+            print(f"Error sending email: {str(e)}")
+            messages.error(request, f'There was an error sending your message: {str(e)}')
+            
+    return render(request, 'restaurants/contact.html', {'subject': subject})
 
 def handler403(request, exception):
     return render(request, 'errors/403.html', status=403)
@@ -330,33 +405,124 @@ def delete_restaurant(request, restaurant_id):
 
 @login_required
 def subscription_plans(request):
-    current_subscription = request.user.subscription
+    current_subscription = None
+    if request.user.is_authenticated:
+        current_subscription = Subscription.objects.filter(user=request.user).first()
+    
+    plans = [
+        {
+            'name': 'Free Plan',
+            'price': '0',
+            'features': [
+                'One Restaurant',
+                'Basic Menu Management',
+                'QR Code Generation',
+                'Basic Support',
+            ]
+        },
+        {
+            'name': 'Pro Plan',
+            'price': 'Contact Us',
+            'features': [
+                'Up to 3 Restaurants',
+                'Advanced Menu Management',
+                'Custom QR Codes',
+                'Priority Support',
+                'Analytics Dashboard',
+                'Theme Customization',
+            ]
+        },
+        {
+            'name': 'Enterprise Plan',
+            'price': 'Contact Us',
+            'features': [
+                'Unlimited Restaurants',
+                'All Pro Features',
+                '24/7 Priority Support',
+                'Custom Integrations',
+                'API Access',
+                'Dedicated Account Manager',
+            ]
+        }
+    ]
+    
     context = {
-        'current_plan': current_subscription.plan,
-        'subscription': current_subscription,
+        'plans': plans,
+        'current_subscription': current_subscription
     }
     return render(request, 'restaurants/subscription_plans.html', context)
 
 @login_required
 def upgrade_subscription(request, plan):
-    if request.method == 'POST':
-        if plan not in ['free', 'pro', 'enterprise']:
-            messages.error(request, 'Invalid subscription plan.')
-            return redirect('subscription_plans')
-            
-        subscription = request.user.subscription
-        subscription.plan = plan
-        subscription.save()
+    if plan not in ['pro', 'enterprise']:
+        messages.error(request, 'Invalid subscription plan.')
+        return redirect('subscription_plans')
+    
+    if not request.user.is_authenticated:
+        messages.error(request, 'Please login to upgrade your subscription.')
+        return redirect('login')
+    
+    # Prepare email subject and message
+    plan_name = 'Pro Plan' if plan == 'pro' else 'Enterprise Plan'
+    subject = f'New {plan_name} Subscription Request'
+    
+    # Get user details
+    user = request.user
+    current_subscription = Subscription.objects.filter(user=user).first()
+    current_plan = current_subscription.plan if current_subscription else 'none'
+    
+    message = f"""
+    New subscription upgrade request:
+    
+    User Details:
+    - Username: {user.username}
+    - Email: {user.email}
+    - Current Plan: {current_plan}
+    - Requested Plan: {plan_name}
+    
+    Restaurants:
+    {Restaurant.objects.filter(owner=user).count()} restaurant(s)
+    
+    Please contact the user to process the upgrade.
+    """
+    
+    # Send email to admin
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [settings.EMAIL_HOST_USER],  # Send to admin email
+            fail_silently=False,
+        )
         
-        if plan == 'free':
-            message = 'Successfully switched to Free plan.'
-        else:
-            message = f'Successfully upgraded to {plan.title()} plan!'
+        # Send confirmation email to user
+        user_message = f"""
+        Dear {user.username},
         
-        messages.success(request, message)
-        return redirect('dashboard')
+        Thank you for your interest in our {plan_name}!
         
-    return redirect('subscription_plans')
+        We have received your subscription upgrade request and our team will contact you shortly to process your upgrade and discuss payment options.
+        
+        Your current subscription will remain active until the upgrade is processed.
+        
+        Best regards,
+        MenuMaghreb Team
+        """
+        
+        send_mail(
+            f'MenuMaghreb - {plan_name} Request Received',
+            user_message,
+            settings.EMAIL_HOST_USER,
+            [user.email],
+            fail_silently=False,
+        )
+        
+        messages.success(request, f'Thank you for your interest in our {plan_name}! We will contact you shortly to process your upgrade.')
+    except Exception as e:
+        messages.error(request, 'There was an error processing your request. Please try again later or contact support.')
+    
+    return redirect('dashboard')
 
 @login_required
 def theme_customize(request, restaurant_id):

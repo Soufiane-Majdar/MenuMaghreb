@@ -55,6 +55,19 @@
 </section>
 
 <div class="container py-5">
+    {% if messages %}
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row g-4">
         <!-- Contact Form -->
         <div class="col-lg-8">
@@ -72,18 +85,26 @@
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                     </div>
+                    
                     <div class="mb-3">
                         <label for="phone" class="form-label">Phone Number</label>
                         <input type="tel" class="form-control" id="phone" name="phone">
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="subject" name="subject" {% if subject %}value="{{ subject }}"{% endif %} required>
+                    </div>
+
                     <div class="mb-3">
                         <label for="plan" class="form-label">Interested Plan</label>
-                        <select class="form-select" id="plan" name="plan" required>
-                            <option value="">Select a plan</option>
-                            <option value="pro">Pro Plan (499 MAD lifetime)</option>
-                            <option value="enterprise">Enterprise Plan (499 MAD/month)</option>
+                        <select class="form-select" id="plan" name="plan">
+                            <option value="">Select a plan (optional)</option>
+                            <option value="pro" {% if subject == 'Pro Plan Inquiry' %}selected{% endif %}>Pro Plan</option>
+                            <option value="enterprise" {% if subject == 'Enterprise Plan Inquiry' %}selected{% endif %}>Enterprise Plan</option>
                         </select>
                     </div>
+
                     <div class="mb-3">
                         <label for="message" class="form-label">Message</label>
                         <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
@@ -101,20 +122,28 @@
                 <div class="contact-method-item text-center">
                     <i class="fas fa-envelope contact-icon"></i>
                     <h4>Email</h4>
-                    <p>sales@devmaghreb.com</p>
+                    <a href="mailto:Devmaghreb@gmail.com" class="text-decoration-none">Devmaghreb@gmail.com</a>
                 </div>
                 
                 <div class="contact-method-item text-center">
                     <i class="fas fa-phone contact-icon"></i>
                     <h4>Phone</h4>
-                    <p>+212 XXX-XXXXXX</p>
+                    <a href="tel:+212621251639" class="text-decoration-none">+212 621-251639</a>
                 </div>
                 
                 <div class="contact-method-item text-center">
                     <i class="fab fa-instagram contact-icon"></i>
                     <h4>Instagram</h4>
-                    <a href="https://www.instagram.com/devmaghreb" target="_blank" class="text-decoration-none">
-                        @devmaghreb
+                    <a href="https://www.instagram.com/devmagheb" target="_blank" class="text-decoration-none">
+                        @devmagheb
+                    </a>
+                </div>
+
+                <div class="contact-method-item text-center">
+                    <i class="fas fa-globe contact-icon"></i>
+                    <h4>Website</h4>
+                    <a href="https://devmaghreb.vercel.app" target="_blank" class="text-decoration-none">
+                        devmaghreb.vercel.app
                     </a>
                 </div>
             </div>
