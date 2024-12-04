@@ -407,8 +407,8 @@
 <nav class="menu-nav">
     <div class="container">
         <div class="menu-nav-scroll">
-            {% for category in categories %}
-            <a href="#category-{{ category.id }}" class="category-link">{{ category.name }}</a>
+            {% for menu_category in menu_categories %}
+            <a href="#category-{{ menu_category.category.id }}" class="category-link">{{ menu_category.category.name }}</a>
             {% endfor %}
         </div>
     </div>
@@ -416,15 +416,15 @@
 
 <!-- Menu Categories -->
 <div class="container mb-5">
-    <div class="menu-style-{{ restaurant.menu_style }}">
-        {% for category in categories %}
-        <section id="category-{{ category.id }}" class="menu-category">
+    <div class="menu-style-{{ restaurant.menu_style|default:'modern' }}">
+        {% for menu_category in menu_categories %}
+        <section id="category-{{ menu_category.category.id }}" class="menu-category">
             <div class="category-header">
-                <h2 class="category-title">{{ category.name }}</h2>
+                <h2 class="category-title">{{ menu_category.category.name }}</h2>
             </div>
             
             <div class="menu-items-grid">
-                {% for item in category.items.all %}
+                {% for item in menu_category.items %}
                 {% if item.is_available %}
                 <article class="menu-item">
                     {% if item.image %}
@@ -442,13 +442,19 @@
                         {% endif %}
                         <div class="menu-item-tags">
                             {% if item.is_vegetarian %}
-                            <span class="menu-item-tag">Vegetarian</span>
+                            <span class="menu-item-tag vegetarian">
+                                <i class="fas fa-leaf"></i> Vegetarian
+                            </span>
                             {% endif %}
                             {% if item.is_vegan %}
-                            <span class="menu-item-tag">Vegan</span>
+                            <span class="menu-item-tag vegan">
+                                <i class="fas fa-seedling"></i> Vegan
+                            </span>
                             {% endif %}
                             {% if item.is_gluten_free %}
-                            <span class="menu-item-tag">Gluten Free</span>
+                            <span class="menu-item-tag gluten-free">
+                                <i class="fas fa-wheat-awn-circle-exclamation"></i> Gluten Free
+                            </span>
                             {% endif %}
                         </div>
                     </div>

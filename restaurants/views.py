@@ -2,13 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.core.exceptions import PermissionDenied
 from .models import Restaurant, MenuCategory, MenuItem, Table, Subscription
 from .forms import RestaurantForm, MenuCategoryForm, MenuItemForm, RestaurantThemeForm, CustomUserCreationForm
 from django.core.mail import send_mail
 from django.conf import settings
-from .decorators import cache_page_for_restaurant, cache_menu_page
+from .decorators import cache_menu_page
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,6 @@ def landing(request):
     return render(request, 'restaurants/landing.html')
 
 @login_required
-@cache_page_for_restaurant(timeout=300)
 def dashboard(request):
     # Get or create subscription
     subscription, created = Subscription.objects.get_or_create(
@@ -29,16 +28,27 @@ def dashboard(request):
         defaults={'plan': 'free', 'is_active': True}
     )
     
-    restaurants = Restaurant.objects.filter(owner=request.user)
+    # Get restaurants with prefetched categories and items
+    restaurants = Restaurant.objects.filter(owner=request.user).prefetch_related(
+        'categories',
+        'categories__items'
+    )
     
     # Get stats for all restaurants
     restaurant_stats = []
     for restaurant in restaurants:
+        # Use prefetched data for better performance
+        total_items = sum(category.items.count() for category in restaurant.categories.all())
+        active_items = sum(
+            sum(1 for item in category.items.all() if item.is_available)
+            for category in restaurant.categories.all()
+        )
+        
         stats = {
             'restaurant': restaurant,
-            'categories': MenuCategory.objects.filter(restaurant=restaurant),
-            'total_items': MenuItem.objects.filter(category__restaurant=restaurant).count(),
-            'active_items': MenuItem.objects.filter(category__restaurant=restaurant, is_available=True).count(),
+            'categories': restaurant.categories.all(),
+            'total_items': total_items,
+            'active_items': active_items,
         }
         restaurant_stats.append(stats)
 
@@ -135,7 +145,6 @@ def restaurant_edit(request, pk):
     return render(request, 'restaurants/restaurant_form.html', context)
 
 @login_required
-@cache_page_for_restaurant(timeout=300)
 def restaurant_detail(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
     return render(request, 'restaurants/restaurant_detail.html', {'restaurant': restaurant})
@@ -170,12 +179,24 @@ def restaurant_menu_edit(request, restaurant_id):
 @cache_menu_page(timeout=3600)
 def menu_view(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-    categories = MenuCategory.objects.filter(restaurant=restaurant).prefetch_related('items')
+    categories = MenuCategory.objects.filter(restaurant=restaurant).prefetch_related(
+        'items'
+    ).order_by('order')
+    
+    # Prepare categories with sorted items
+    menu_categories = []
+    for category in categories:
+        items = category.items.all().order_by('order', 'name')
+        menu_categories.append({
+            'category': category,
+            'items': items
+        })
+    
     table_number = request.GET.get('table', '')
     
     context = {
         'restaurant': restaurant,
-        'categories': categories,
+        'menu_categories': menu_categories,
         'table_number': table_number,
     }
     return render(request, 'restaurants/menu.html', context)
@@ -246,11 +267,34 @@ def category_edit(request, restaurant_id, category_id):
 def delete_category(request, restaurant_id, category_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
     category = get_object_or_404(MenuCategory, id=category_id, restaurant=restaurant)
-    if request.method == 'POST':
-        category.delete()
-        messages.success(request, 'Category deleted successfully!')
-    else:
-        messages.error(request, 'Invalid request method!')
+    
+    try:
+        if request.method == 'POST':
+            # Get items count for the message
+            items_count = category.items.count()
+            category_name = category.name
+            
+            # Delete the category
+            category.delete()
+            
+            # Provide detailed success message
+            if items_count > 0:
+                messages.success(request, f'Category "{category_name}" and its {items_count} items have been deleted successfully!')
+            else:
+                messages.success(request, f'Category "{category_name}" has been deleted successfully!')
+            
+            # Return JSON response for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+        else:
+            messages.error(request, 'Invalid request method!')
+            
+    except Exception as e:
+        logger.error(f"Error deleting category {category_id}: {str(e)}", exc_info=True)
+        messages.error(request, 'An error occurred while deleting the category. Please try again.')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
     return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
 
 @login_required
@@ -307,12 +351,31 @@ def item_edit(request, restaurant_id, item_id):
 @login_required
 def delete_item(request, restaurant_id, item_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id, owner=request.user)
-    item = get_object_or_404(MenuItem, id=item_id, restaurant=restaurant)
-    if request.method == 'POST':
-        item.delete()
-        messages.success(request, 'Menu item deleted successfully!')
-    else:
-        messages.error(request, 'Invalid request method!')
+    item = get_object_or_404(MenuItem, id=item_id, category__restaurant=restaurant)
+    
+    try:
+        if request.method == 'POST':
+            item_name = item.name
+            category_name = item.category.name
+            
+            # Delete the item
+            item.delete()
+            
+            # Provide detailed success message
+            messages.success(request, f'Item "{item_name}" has been deleted from category "{category_name}" successfully!')
+            
+            # Return JSON response for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+        else:
+            messages.error(request, 'Invalid request method!')
+            
+    except Exception as e:
+        logger.error(f"Error deleting item {item_id}: {str(e)}", exc_info=True)
+        messages.error(request, 'An error occurred while deleting the item. Please try again.')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
     return redirect('restaurant_menu_edit', restaurant_id=restaurant_id)
 
 @login_required

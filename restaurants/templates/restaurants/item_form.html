@@ -12,7 +12,7 @@
                     <h4 class="mb-0">{{ action }} Menu Item</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" enctype="multipart/form-data" id="menuItemForm">
                         {% csrf_token %}
                         {{ form|crispy }}
                         <div class="d-flex justify-content-between mt-4">
@@ -29,4 +29,19 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Prevent double form submission
+    document.getElementById('menuItemForm').addEventListener('submit', function(e) {
+        var submitButton = this.querySelector('button[type="submit"]');
+        if (submitButton.disabled) {
+            e.preventDefault();
+        } else {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+    });
+</script>
 {% endblock %}

@@ -31,6 +31,24 @@
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<!-- Include menu management JavaScript -->
+<script src="{% static 'restaurants/js/menu-management.js' %}"></script>
+
+<!-- Delete buttons with improved handling -->
+<script>
+    function deleteCategory(categoryId) {
+        const url = "{% url 'delete_category' restaurant.id 999 %}".replace('999', categoryId);
+        handleDelete(url, `category-${categoryId}`, 'category');
+    }
+
+    function deleteItem(itemId) {
+        const url = "{% url 'delete_item' restaurant.id 999 %}".replace('999', itemId);
+        handleDelete(url, `item-${itemId}`, 'item');
+    }
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -84,29 +102,35 @@
     {% if categories %}
     <div class="row row-cols-1 g-4">
         {% for category in categories %}
-        <div class="col">
+        <div id="category-{{ category.id }}" class="col">
             <div class="card category-card">
-                <div class="card-header bg-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">{{ category.name }}</h5>
-                        <div class="btn-group">
-                            <a href="{% url 'category_edit' restaurant.id category.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ category.id }}">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                            <a href="{% url 'item_create' restaurant.id %}?category={{ category.id }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-plus"></i> Add Item
-                            </a>
-                        </div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ category.name }}</h5>
+                    <div class="btn-group">
+                        <a href="{% url 'category_edit' restaurant.id category.id %}" 
+                           class="btn btn-sm btn-outline-primary"
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="top" 
+                           title="Edit category">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="deleteCategory({{ category.id }})" 
+                                class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Delete category">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <a href="{% url 'item_create' restaurant.id %}?category={{ category.id }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Add Item
+                        </a>
                     </div>
                 </div>
                 <div class="card-body">
                     {% if category.items.all %}
                     <div class="list-group list-group-flush">
                         {% for item in category.items.all %}
-                        <div class="list-group-item menu-item">
+                        <div id="item-{{ item.id }}" class="list-group-item menu-item">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">{{ item.name }}</h6>
@@ -117,10 +141,18 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <span class="price-badge">{{ item.price }} MAD</span>
                                     <div class="btn-group">
-                                        <a href="{% url 'item_edit' restaurant.id item.id %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'item_edit' restaurant.id item.id %}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Edit item">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item.id }}">
+                                        <button onclick="deleteItem({{ item.id }})" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-placement="top" 
+                                                title="Delete item">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
