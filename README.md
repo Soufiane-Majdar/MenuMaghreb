@@ -49,7 +49,7 @@ MenuMaghreb is a sophisticated digital menu platform designed specifically for m
 
 ## 🚀 Getting Started
 
-1. Sign up for a free account at [MenuMaghreb](https://menumaghreb.com)
+1. Sign up for a free account at [MenuMaghreb](https://menu-maghreb.vercel.app/)
 2. Create your restaurant profile
 3. Add your menu categories and items
 4. Customize your menu's appearance
