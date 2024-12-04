@@ -49,3 +49,10 @@ WARNING 2024-12-04 11:37:53,446 log 102354 139634975696576 Not Found: /admin pan
 WARNING 2024-12-04 11:40:18,229 log 102354 139634856146624 Not Found: /favicon.ico
 WARNING 2024-12-04 11:40:21,111 log 102354 139634856146624 Not Found: /favicon.ico
 WARNING 2024-12-04 11:40:34,928 log 102354 139634856146624 Not Found: /favicon.ico
+INFO 2024-12-04 11:44:50,438 autoreload 102354 139635073084288 /home/sofiane/CascadeProjects/qr_menu_platform/qr_menu_core/settings.py changed, reloading.
+INFO 2024-12-04 11:44:52,354 autoreload 103883 134961128749952 Watching for file changes with StatReloader
+INFO 2024-12-04 11:49:42,169 autoreload 104127 134047039286144 Watching for file changes with StatReloader
+INFO 2024-12-04 11:50:01,891 forms 104127 134046868829888 Saving restaurant instance: MenuMaghreb
+INFO 2024-12-04 11:50:01,891 forms 104127 134046868829888 Saving restaurant instance: MenuMaghreb
+WARNING 2024-12-04 11:50:05,308 log 104127 134046868829888 Not Found: /favicon.ico
+WARNING 2024-12-04 11:50:11,109 log 104127 134046868829888 Not Found: /favicon.ico

@@ -29,9 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='your-secret-key-here')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = 'DEVELOPMENT' in os.environ
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = ['.vercel.app', '.now.sh', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'qr_menu_core.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:aNJovmYCerWrOLIIZfTvpXKKxxJRGiqe@autorack.proxy.rlwy.net:15059/railway',
+        default=config('DATABASE_URL', default='postgresql://postgres:aNJovmYCerWrOLIIZfTvpXKKxxJRGiqe@autorack.proxy.rlwy.net:15059/railway'),
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -129,33 +129,33 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
 
-# Cloudinary settings
-cloudinary.config(
-    cloud_name = config('CLOUDINARY_CLOUD_NAME'),
-    api_key = config('CLOUDINARY_API_KEY'),
-    api_secret = config('CLOUDINARY_API_SECRET'),
-    secure = True
-)
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': config('CLOUDINARY_API_KEY'),
-    'API_SECRET': config('CLOUDINARY_API_SECRET'),
-}
-
-# Media files configuration
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Cloudinary configuration
+cloudinary.config(
+    cloud_name=config('CLOUDINARY_CLOUD_NAME', default='dxxm9agbb'),
+    api_key=config('CLOUDINARY_API_KEY', default='296675898998215'),
+    api_secret=config('CLOUDINARY_API_SECRET', default='oQ3TOPYOncCs_-QVMPcKE-CIo98')
+)
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default='dxxm9agbb'),
+    'API_KEY': config('CLOUDINARY_API_KEY', default='296675898998215'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET', default='oQ3TOPYOncCs_-QVMPcKE-CIo98'),
+}
+
+# Media files configuration
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Authentication settings
 LOGIN_URL = 'login'
@@ -211,7 +211,6 @@ CACHE_MIDDLEWARE_KEY_PREFIX = 'menumaghreb'
 
 # Static files compression
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Compression settings
 COMPRESS_ENABLED = True
