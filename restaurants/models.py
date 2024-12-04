@@ -7,6 +7,26 @@ from django.core.files import File
 from PIL import Image
 from django.utils import timezone
 
+def restaurant_logo_path(instance, filename):
+    # File will be uploaded to media/restaurant_logos/filename
+    return f'restaurant_logos/{filename}'
+
+def restaurant_cover_path(instance, filename):
+    # File will be uploaded to media/restaurant_covers/filename
+    return f'restaurant_covers/{filename}'
+
+def restaurant_qr_path(instance, filename):
+    # File will be uploaded to media/restaurant_qr_codes/filename
+    return f'restaurant_qr_codes/{filename}'
+
+def menu_item_path(instance, filename):
+    # File will be uploaded to media/menu_items/filename
+    return f'menu_items/{filename}'
+
+def table_qr_path(instance, filename):
+    # File will be uploaded to media/table_qr_codes/filename
+    return f'table_qr_codes/{filename}'
+
 class Subscription(models.Model):
     PLAN_CHOICES = [
         ('free', 'Free Plan'),
@@ -59,9 +79,9 @@ class Restaurant(models.Model):
     description = models.TextField(blank=True)
     address = models.TextField()
     phone = models.CharField(max_length=20)
-    logo = models.ImageField(upload_to='logos/', null=True, blank=True, max_length=255)
-    cover_image = models.ImageField(upload_to='covers/', null=True, blank=True, max_length=255)
-    qr_code = models.ImageField(upload_to='restaurant_qr_codes/', blank=True, null=True, max_length=255)
+    logo = models.ImageField(upload_to=restaurant_logo_path, null=True, blank=True, max_length=255)
+    cover_image = models.ImageField(upload_to=restaurant_cover_path, null=True, blank=True, max_length=255)
+    qr_code = models.ImageField(upload_to=restaurant_qr_path, blank=True, null=True, max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -119,11 +139,12 @@ class Restaurant(models.Model):
             # Save QR code
             qr_buffer = BytesIO()
             qr_image.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
             self.qr_code.save(f'menu_qr_{self.id}.png',
                             File(qr_buffer), save=False)
 
-        # Optimize logo if it exists
-        if self.logo:
+        # Optimize logo if it exists and has changed
+        if self.logo and hasattr(self.logo, 'file'):
             img = Image.open(self.logo)
             if img.mode != 'RGB':
                 img = img.convert('RGB')
@@ -132,10 +153,11 @@ class Restaurant(models.Model):
             img.thumbnail(output_size, Image.Resampling.LANCZOS)
             img_io = BytesIO()
             img.save(img_io, format='JPEG', quality=85)
-            self.logo = File(img_io, name=self.logo.name)
+            img_io.seek(0)
+            self.logo.save(self.logo.name.split('/')[-1], File(img_io), save=False)
 
-        # Optimize cover image if it exists
-        if self.cover_image:
+        # Optimize cover image if it exists and has changed
+        if self.cover_image and hasattr(self.cover_image, 'file'):
             cover = Image.open(self.cover_image)
             if cover.mode != 'RGB':
                 cover = cover.convert('RGB')
@@ -152,11 +174,14 @@ class Restaurant(models.Model):
                 top = (cover.height - new_height) // 2
                 cover = cover.crop((0, top, cover.width, top + new_height))
             
-            # Resize to a standard size
-            cover.thumbnail((1920, 1080), Image.Resampling.LANCZOS)
+            # Resize to a reasonable max size while maintaining aspect ratio
+            max_dimension = 1920
+            cover.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+            
             cover_io = BytesIO()
-            cover.save(cover_io, format='JPEG', quality=85)
-            self.cover_image = File(cover_io, name=self.cover_image.name)
+            cover.save(cover_io, format='PNG', quality=85)
+            cover_io.seek(0)
+            self.cover_image.save(self.cover_image.name.split('/')[-1], File(cover_io), save=False)
 
         super().save(*args, **kwargs)
 
@@ -177,7 +202,7 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='menu_items/', blank=True, null=True, max_length=255)
+    image = models.ImageField(upload_to=menu_item_path, blank=True, null=True, max_length=255)
     is_available = models.BooleanField(default=True)
     order = models.IntegerField(default=0)
     
@@ -199,7 +224,7 @@ class Table(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='tables')
     table_number = models.CharField(max_length=50)
     seats = models.IntegerField(default=2)
-    qr_code = models.ImageField(upload_to='qr_codes/', blank=True)
+    qr_code = models.ImageField(upload_to=table_qr_path, blank=True)
 
     def __str__(self):
         return f"{self.restaurant.name} - Table {self.table_number}"
