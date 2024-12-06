@@ -19,4 +19,4 @@ python3.12 manage.py migrate
 # cp -r /usr/local/lib/python3.12/site-packages/jazzmin/static/jazzmin staticfiles/static/
 
 # Set permissions
-chmod -R 755 staticfiles/
+# chmod -R 755 staticfiles/
