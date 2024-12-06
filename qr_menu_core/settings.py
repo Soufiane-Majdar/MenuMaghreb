@@ -126,10 +126,10 @@ USE_TZ = True
 
 
 # Static files configuration
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = '/staticfiles_build/'
+STATIC_ROOT = BASE_DIR / 'staticfiles_build'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / 'static_build',
 ]
 
 # Static files finders
