@@ -20,3 +20,17 @@ python3.12 manage.py migrate
 
 # Set permissions
 # chmod -R 755 staticfiles/
+# Command to create superuser
+echo "Creating superuser..."
+python manage.py shell <<EOF
+from django.contrib.auth import get_user_model
+User = get_user_model()
+username = "soufiane"
+email = "soufiane.majdar@gmail.com"
+password = "s_mjr3145@dev"
+if not User.objects.filter(email=email).exists():
+    User.objects.create_superuser(username=username, email=email, password=password)
+    print("Superuser created: Username=\\'\$username\\', Email=\\'\$email\\'")
+else:
+    print("Superuser already exists: Email=\\'\$email\\'")
+EOF
