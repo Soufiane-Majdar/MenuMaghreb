@@ -4,13 +4,17 @@ Django settings for Main project.
 
 from pathlib import Path
 import os
+from decouple import config
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here'
-
+SECRET_KEY = config('SECRET_KEY', default='your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -62,14 +66,11 @@ WSGI_APPLICATION = 'Main.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'menumaghreb',
-        'USER': 'postgres',
-        'PASSWORD': 'your-password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default='postgresql://postgres:aNJovmYCerWrOLIIZfTvpXKKxxJRGiqe@autorack.proxy.rlwy.net:15059/railway'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # Password validation
